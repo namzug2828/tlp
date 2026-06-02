@@ -17,7 +17,16 @@ class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
         self.posicion = 0
-        self.ast = {"tipo_juego": None, "config": {}, "shapes": {}, "events": {}, "powerups": {}}
+        self.ast = {
+                    "tipo_juego": None, 
+                    "config": {}, 
+                    "shapes": {}, 
+                    "foods": {},
+                    "obstacles": {},
+                    "powerups": {},
+                    "levels": {},
+                    "events": {}
+        }
 
     def parse(self):
         while self.posicion < len(self.tokens):
@@ -30,6 +39,9 @@ class Parser:
                 self.parsear_shape()
             elif token_actual == 'ON':
                 self.parsear_evento()
+            elif token_actual == 'LEVELS':
+                self.parsear_levels()
+            
             else:
                 self.posicion += 1
         return self.ast
@@ -71,16 +83,25 @@ class Parser:
         # Valores por defecto para atributos adicionales
         color = "#00FFFF"
         chance = 10
+        effect = None
+        duration = None
         
         # Parsear atributos opcionales COLOR y CHANCE
-        while self.posicion < len(self.tokens) and self.tokens[self.posicion] in ['COLOR', 'CHANCE']:
+        while self.posicion < len(self.tokens) and self.tokens[self.posicion] in ['COLOR', 'CHANCE', 'EFFECT', 'DURATION']:
             attr = self.consumir()
             self.consumir(':')
             val = self.consumir()
             if attr == 'COLOR':
                 color = val
+
             elif attr == 'CHANCE':
                 chance = int(val)
+
+            elif attr == 'EFFECT':
+                 effect = val
+
+            elif attr == 'DURATION':
+                 duration = int(val)
                 
         estados = []
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'STATE':
@@ -100,19 +121,60 @@ class Parser:
         self.consumir('END')
         
         # Guardar en la coleccion correspondiente
-        if tipo == 'POWERUP':
-            self.ast['powerups'][nombre] = {
-                "color": color,
-                "chance": chance,
-                "states": estados
-            }
-        else:
-            self.ast['shapes'][nombre] = {
-                "form": forma,
-                "color": color,
-                "chance": chance,
-                "states": estados
-            }
+        datos = {
+            "form": forma,
+            "color": color,
+            "chance": chance,
+            "states": estados,
+            "effect": effect,
+            "duration": duration
+        }
+
+        if tipo == 'SHAPE':
+            self.ast['shapes'][nombre] = datos
+
+        elif tipo == 'FOOD':
+            self.ast['foods'][nombre] = datos
+
+        elif tipo == 'OBSTACLE':
+            self.ast['obstacles'][nombre] = datos
+
+        elif tipo == 'POWERUP':
+            self.ast['powerups'][nombre] = datos
+    def parsear_levels(self):
+
+        self.consumir('LEVELS')
+        self.consumir(':')
+    
+        while self.tokens[self.posicion] != 'END':
+        
+            nivel = self.consumir()
+    
+            self.consumir(':')
+    
+            datos_nivel = {}
+    
+            while self.tokens[self.posicion] != 'END':
+            
+                atributo = self.consumir()
+    
+                self.consumir(':')
+    
+                valor = self.consumir()
+    
+                if atributo == 'SPEED':
+                    datos_nivel["speed"] = int(valor)
+    
+                elif atributo == 'POWERUP_DURATION':
+                    datos_nivel["powerup_duration"] = int(valor)
+    
+            self.consumir('END')
+    
+            self.ast["levels"][nivel] = datos_nivel
+    
+        self.consumir('END')
+    
+
 
     # --- FUNCION CORREGIDA ---
     def parsear_evento(self):

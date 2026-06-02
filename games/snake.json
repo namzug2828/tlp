@@ -1,7 +1,9 @@
 {
   "shapes": {
     "SNAKE_HEAD": {
+      "form": "CIRCLE", 
       "color": "#00FFFF", 
+      "effect": null, 
       "states": [
         [
           [
@@ -10,10 +12,12 @@
         ]
       ], 
       "chance": 10, 
-      "form": "CIRCLE"
+      "duration": null
     }, 
     "SNAKE_BODY": {
+      "form": "TRIANGLE", 
       "color": "#00FFFF", 
+      "effect": null, 
       "states": [
         [
           [
@@ -22,10 +26,48 @@
         ]
       ], 
       "chance": 10, 
-      "form": "TRIANGLE"
+      "duration": null
+    }
+  }, 
+  "foods": {
+    "APPLE": {
+      "form": "CIRCLE", 
+      "color": "#FF0000", 
+      "effect": "GROW", 
+      "states": [], 
+      "chance": 10, 
+      "duration": null
+    }, 
+    "POISON_FRUIT": {
+      "form": "CIRCLE", 
+      "color": "#9900FF", 
+      "effect": null, 
+      "states": [], 
+      "chance": 10, 
+      "duration": null
     }
   }, 
   "tipo_juego": "SNAKE", 
+  "powerups": {
+    "IMMORTAL_FRUIT": {
+      "form": "CIRCLE", 
+      "color": "#FFFF00", 
+      "effect": null, 
+      "states": [], 
+      "chance": 10, 
+      "duration": 5
+    }
+  }, 
+  "obstacles": {
+    "CLOUD": {
+      "form": "CLOUD", 
+      "color": "#CCCCCC", 
+      "effect": null, 
+      "states": [], 
+      "chance": 10, 
+      "duration": null
+    }
+  }, 
   "config": {
     "grid_size": [
       18, 
@@ -125,5 +167,16 @@
       }
     ]
   }, 
-  "powerups": {}
+  "levels": {
+    "BABY": {
+      "speed": 150
+    }, 
+    "ENTHUSIAST": {
+      "powerup_duration": 5, 
+      "speed": 120
+    }, 
+    "NYAN_CAT": {
+      "speed": 60
+    }
+  }
 }

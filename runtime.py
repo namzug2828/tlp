@@ -51,6 +51,8 @@ class Juego:
         self.label_controles = tk.Label(self.marco_score, text="CONTROLES\nFlechas: Mover/Rotar", bg='#222222', fg='gray', font=('Consolas', 10))
         self.label_controles.pack(pady=20, padx=10)
 
+        
+
         # Configurar eventos de teclado. Usamos <Key> para capturar cualquier tecla
         self.root.bind('<Key>', self.manejar_input_gui)
 
@@ -74,13 +76,36 @@ class Juego:
 
         # Cargar los power-ups si existen
         self.powerups = {}
+
         for nombre, datos in self.datos_juego.get('powerups', {}).items():
+
             if isinstance(datos, dict):
+
                 self.powerups[nombre] = {
-                    "color": datos.get("color", "#FFD700"),
-                    "chance": int(datos.get("chance", 0)),
-                    "states": datos.get("states", []),
-                    "form": datos.get("form", "RECTANGLE")
+
+                "color": datos.get("color", "#FFD700"),
+                "chance": int(datos.get("chance", 0)),
+                "states": datos.get("states", []),
+                "form": datos.get("form", "RECTANGLE")
+                }
+            
+        self.obstacles = {}
+
+        for nombre, datos in self.datos_juego.get('obstacles', {}).items():
+        
+            if isinstance(datos, dict):
+            
+                self.obstacles[nombre] = {
+                
+                    "color": datos.get(
+                        "color",
+                        "#AAAAAA"
+                    ),
+
+                    "form": datos.get(
+                        "form",
+                        "CIRCLE"
+                    )
                 }
 
         if self.tipo_juego == 'TETRIS':
@@ -93,14 +118,28 @@ class Juego:
             self.lineas_3_simultaneas = False
         
         if self.tipo_juego == 'SNAKE':
+            
             self.serpiente_cuerpo = []
             self.serpiente_direccion = (1, 0)
-            self.posicion_comida = None
+            self.posicion_manzana = None
+            self.posiciones_veneno = []
+            self.posiciones_obstaculos = []
+            self.contador_rondas = 0
+            self.posicion_powerup = None
+            self.inmune = False
+            self.tiempo_inmunidad = 0
+            self.contador_rondas = 0
             self.velocidad_gravedad = 0.15
+            self.nivel_actual = self.seleccionar_nivel()
+            self.configurar_nivel()
+
+            
         
         self.timer_gravedad = 0
         self.ejecutar_evento('ON_START')
         self.timer_id = None # Para controlar el loop de Tkinter
+
+        
 
     def run(self):
         # Inicia el ciclo principal de juego de Tkinter
@@ -151,6 +190,92 @@ class Juego:
             elif key == 'RIGHT': self.snake_cambiar_direccion('RIGHT')
 
 
+    def seleccionar_nivel(self):
+
+        ventana = tk.Toplevel(self.root)
+    
+        ventana.title("Seleccionar dificultad")
+        ventana.geometry("300x200")
+    
+        nivel = tk.StringVar()
+        nivel.set("BABY")
+    
+        tk.Label(
+            ventana,
+            text="Seleccione dificultad",
+            font=("Consolas", 12)
+        ).pack(pady=10)
+    
+        tk.Radiobutton(
+            ventana,
+            text="Baby",
+            variable=nivel,
+            value="BABY"
+        ).pack()
+    
+        tk.Radiobutton(
+            ventana,
+            text="Enthusiast",
+            variable=nivel,
+            value="ENTHUSIAST"
+        ).pack()
+    
+        tk.Radiobutton(
+            ventana,
+            text="Nyan Cat",
+            variable=nivel,
+            value="NYAN_CAT"
+        ).pack()
+    
+        resultado = [None]
+    
+        def aceptar():
+            resultado[0] = nivel.get()
+            ventana.destroy()
+    
+        tk.Button(
+            ventana,
+            text="Jugar",
+            command=aceptar
+        ).pack(pady=15)
+    
+        ventana.transient(self.root)
+        ventana.grab_set()
+    
+        self.root.wait_window(ventana)
+    
+        return resultado[0]
+
+
+    def configurar_nivel(self):
+
+        self.veneno_habilitado = False
+        self.obstaculos_habilitados = False
+        self.powerup_habilitado = False
+
+        if self.nivel_actual == "BABY":
+
+            self.velocidad_gravedad = 0.15
+
+        elif self.nivel_actual == "ENTHUSIAST":
+
+            self.velocidad_gravedad = 0.12
+
+            self.veneno_habilitado = True
+
+            self.powerup_habilitado = True
+
+        elif self.nivel_actual == "NYAN_CAT":
+
+            self.velocidad_gravedad = 0.08
+
+            self.veneno_habilitado = True
+
+            self.obstaculos_habilitados = True
+
+            self.powerup_habilitado = True
+
+
     def dibujar(self):
         self.canvas.delete("all") # Borrar todo en cada frame
         self.label_score.config(text="PUNTUACION\n" + str(self.puntuacion))
@@ -188,32 +313,111 @@ class Juego:
         # 3. Dibujar Snake y Comida
         if self.tipo_juego == 'SNAKE':
             # Comida
-            if self.posicion_comida:
-                x, y = self.posicion_comida
-                self.dibujar_celda(x, y, COLOR_FOOD)
-            # Cuerpo de la Serpiente
+            if self.posicion_manzana:
+
+                x, y = self.posicion_manzana
+
+                self.dibujar_celda(
+                x,
+                y,
+                "#FF0000",
+                "CIRCLE"
+                )
+
+            color = "#AAAAAA"
+            forma = "CIRCLE"
+
+            if self.posicion_powerup:
+
+             x, y = self.posicion_powerup
+            
+             self.dibujar_celda(
+                 x,
+                 y,
+                 "#FFD700",
+                 "CIRCLE"
+             )
+
+            if "CLOUD" in self.obstacles:
+            
+                color = self.obstacles["CLOUD"]["color"]
+                forma = self.obstacles["CLOUD"]["form"]
+
+            for x, y in self.posiciones_obstaculos:
+            
+                self.dibujar_celda(
+                    x,
+                    y,
+                    color,
+                    forma
+                )
+
+            for x, y in self.posiciones_veneno:
+
+                 self.dibujar_celda(
+                     x,
+                     y,
+                     "#9900FF",
+                     "CIRCLE"
+                 )
+            
+            for x, y in self.posiciones_obstaculos:
+
+                self.dibujar_celda(
+                    x,
+                    y,
+                    "#AAAAAA",
+                    "CIRCLE"
+                )
+            
+            
+
             for i, segmento in enumerate(self.serpiente_cuerpo):
                 x, y = segmento
 
                 if i == 0:
-                    color = COLOR_SNAKE_CABEZA
+                
+                    if self.inmune:
+                        color = "#FF00D4"
+                    else:
+                        color = COLOR_SNAKE_CABEZA
+
+                    if self.nivel_actual == "NYAN_CAT":
+                        forma = "NYAN_CAT"
+                    else:
+                        forma = self.shapes.get(
+                            "SNAKE_HEAD",
+                            {}
+                        ).get(
+                            "form",
+                            "RECTANGLE"
+                        )
+
+                else:
+                    if self.nivel_actual == "NYAN_CAT":
+
+                        colores = [
+                            "#FF0000",
+                            "#FF8800",
+                            "#FFFF00",
+                            "#00FF00",
+                            "#00FFFF",
+                            "#0000FF",
+                            "#FF00FF"
+                        ]
+
+                        color = colores[i % len(colores)]
+
+                    else:
+                    
+                        color = COLOR_SNAKE_CUERPO
                     forma = self.shapes.get(
-                        "SNAKE_HEAD",
+                        "SNAKE_BODY",
                         {}
                     ).get(
                         "form",
                         "RECTANGLE"
                     )
-
-                else:
-                   color = COLOR_SNAKE_CUERPO
-                   forma = self.shapes.get(
-                       "SNAKE_BODY",
-                       {}
-                   ).get(
-                       "form",
-                       "RECTANGLE"
-                   )
 
                 self.dibujar_celda(x, y, color, forma)
 
@@ -239,11 +443,31 @@ class Juego:
                 outline='#000000'
             )
         elif forma == "NYAN_CAT":
-            self.canvas.create_text(
-            x1 + ts/2,
-            y1 + ts/2,
-            text="😺"
-        )
+
+            self.canvas.create_oval(
+                x1,
+                y1,
+                x2,
+                y2,
+                fill="#FFD1DC",
+                outline="black"
+            )
+
+            self.canvas.create_oval(
+                x1+5,
+                y1+7,
+                x1+8,
+                y1+10,
+                fill="black"
+            )
+
+            self.canvas.create_oval(
+                x1+17,
+                y1+7,
+                x1+20,
+                y1+10,
+                fill="black"
+            )
 
         else:
             self.canvas.create_rectangle(
@@ -266,8 +490,9 @@ class Juego:
                     if verbo == 'ROTATE': self.tetris_rotar_pieza()
                 
                 if self.tipo_juego == 'SNAKE':
+                    
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.snake_spawn_jugador(accion)
-                    if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_comida()
+                    if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_manzana()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
                     if verbo == 'GROW': self.snake_crecer()
 
@@ -388,31 +613,183 @@ class Juego:
         self.serpiente_cuerpo = [(coords[0], coords[1])]
         self.serpiente_direccion = (1, 0)
         
-    def snake_spawn_comida(self):
+    def snake_spawn_manzana(self):
+
         while True:
-            x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
-            if (x, y) not in self.serpiente_cuerpo:
-                self.posicion_comida = (x, y)
+
+            x = random.randint(0, self.ancho - 1)
+            y = random.randint(0, self.alto - 1)
+
+            if (x,y) not in self.serpiente_cuerpo:
+
+                self.posicion_manzana = (x,y)
                 break
-                
+    
+    def snake_spawn_powerup(self):
+
+        while True:
+
+            x = random.randint(0, self.ancho - 1)
+            y = random.randint(0, self.alto - 1)
+
+            if (x,y) not in self.serpiente_cuerpo \
+               and (x,y) != self.posicion_manzana \
+               and (x,y) not in self.posiciones_veneno \
+               and (x,y) not in self.posiciones_obstaculos:
+
+                self.posicion_powerup = (x,y)
+                break
+
+    def snake_activar_inmunidad(self):
+
+        self.inmune = True
+        self.tiempo_inmunidad = time.time() + 5
+
+        self.posicion_powerup = None
+
+    def snake_spawn_veneno(self):
+
+        while True:
+
+            x = random.randint(0, self.ancho - 1)
+            y = random.randint(0, self.alto - 1)
+
+            if (x,y) not in self.serpiente_cuerpo \
+               and (x,y) != self.posicion_manzana \
+               and (x,y) not in self.posiciones_veneno:
+
+                self.posiciones_veneno.append((x,y))
+                break
+    
+    def snake_comer_veneno(self):
+
+        if self.inmune:
+        
+            self.posiciones_veneno = [
+                p for p in self.posiciones_veneno
+                if p != self.serpiente_cuerpo[0]
+            ]
+
+            return
+
+        self.puntuacion -= 10
+
+        if self.puntuacion < 0:
+            self.puntuacion = 0
+
+        if len(self.serpiente_cuerpo) <= 3:
+            self.juego_terminado = True
+            return
+
+        for _ in range(3):
+            self.serpiente_cuerpo.pop()
+
+    def snake_spawn_obstaculos(self):
+
+        self.posiciones_obstaculos = []
+
+        while len(self.posiciones_obstaculos) < 4:
+
+            x = random.randint(0, self.ancho - 1)
+            y = random.randint(0, self.alto - 1)
+
+            if (x,y) not in self.serpiente_cuerpo \
+               and (x,y) != self.posicion_manzana \
+               and (x,y) not in self.posiciones_veneno \
+               and (x,y) not in self.posiciones_obstaculos:
+
+                self.posiciones_obstaculos.append((x,y))
+
+    def snake_chocar_obstaculo(self):
+        if self.inmune:
+            return
+
+        if self.puntuacion == 0 and len(self.serpiente_cuerpo) <= 1:
+
+            self.juego_terminado = True
+            return
+
+        self.puntuacion = 0
+
+        self.serpiente_cuerpo = [
+            self.serpiente_cuerpo[0]
+        ]
+
+
     def snake_mover_jugador(self):
+        if self.inmune and time.time() > self.tiempo_inmunidad:
+
+            self.inmune = False
+
         if not self.serpiente_cuerpo: return
         cabeza_x, cabeza_y = self.serpiente_cuerpo[0]
         dir_x, dir_y = self.serpiente_direccion
         nueva_cabeza = (cabeza_x + dir_x, cabeza_y + dir_y)
 
         if not (0 <= nueva_cabeza[0] < self.ancho and 0 <= nueva_cabeza[1] < self.alto):
+
+            if self.inmune:
+            
+                self.serpiente_cuerpo.pop()
+                return
+
             self.ejecutar_evento('ON_COLLISION_WALL')
             return
             
         if nueva_cabeza in self.serpiente_cuerpo[:-1]:
-            self.ejecutar_evento('ON_COLLISION_SELF')
-            return
+
+             if self.inmune:
+                
+                 self.serpiente_cuerpo.pop()
+                 return
+            
+             self.ejecutar_evento('ON_COLLISION_SELF')
+             return
 
         self.serpiente_cuerpo.insert(0, nueva_cabeza)
         
-        if nueva_cabeza == self.posicion_comida:
+        if nueva_cabeza == self.posicion_manzana:
+            self.contador_rondas += 1
+            if self.obstaculos_habilitados:
+
+                if self.contador_rondas % 3 == 0:
+
+                    self.snake_spawn_obstaculos()
+
+            if self.powerup_habilitado:
+
+                if self.contador_rondas % 6 == 0:
+
+                    self.snake_spawn_powerup()
+
             self.ejecutar_evento('ON_EAT_FOOD')
+
+            self.snake_spawn_manzana()
+
+            if self.veneno_habilitado:
+
+                if random.random() < 0.3:
+
+                    self.snake_spawn_veneno()
+        
+        elif nueva_cabeza in self.posiciones_obstaculos:
+
+            self.snake_chocar_obstaculo()
+
+            return
+
+        elif nueva_cabeza in self.posiciones_veneno:
+
+            self.posiciones_veneno.remove(nueva_cabeza)
+
+            self.snake_comer_veneno()
+
+            self.snake_spawn_veneno()
+        
+        elif nueva_cabeza == self.posicion_powerup:
+
+            self.snake_activar_inmunidad()
+
         else:
             self.serpiente_cuerpo.pop()
 

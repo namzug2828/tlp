@@ -3,6 +3,26 @@ GAME_TYPE SNAKE
 
 GAME_GRID (18, 18)
 
+
+# --- Definir dificultad ---
+
+LEVELS:
+
+BABY:
+    SPEED: 150
+END
+
+ENTHUSIAST:
+    SPEED: 120
+    POWERUP_DURATION: 5
+END
+
+NYAN_CAT:
+    SPEED: 60
+END
+
+END
+
 # --- Definicion de Elementos ---
 DEFINE SHAPE SNAKE_BODY:
   FORM TRIANGLE
