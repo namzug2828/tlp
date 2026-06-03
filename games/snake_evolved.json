@@ -157,5 +157,16 @@
       }
     ]
   },
-  "levels": {}
+  "levels": {
+    "BABY": {
+      "speed": 0.2
+    },
+    "ENTUSIASTA": {
+      "speed": 0.15,
+      "powerup_duration": 5
+    },
+    "NYAN_CAT": {
+      "speed": 0.07
+    }
+  }
 }

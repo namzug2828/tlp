@@ -1,0 +1,142 @@
+========================================================================
+            INFORME DE CAMBIOS: SNAKE EVOLVED (ACTIVIDAD 4)
+========================================================================
+
+Este documento detalla la arquitectura, el diseño técnico y los cambios
+implementados para transformar el juego clásico de Snake en una experiencia
+multinivel avanzada, robusta y completamente retrocompatible.
+
+------------------------------------------------------------------------
+1. INTEGRANTES DEL GRUPO Y APORTES TÉCNICOS ESPECÍFICOS
+------------------------------------------------------------------------
+El desarrollo de esta actividad fue coordinado y ejecutado de manera conjunta
+por los siguientes 5 integrantes, dividiendo las responsabilidades técnicas:
+
+- LUIS CARDONA (Diseño de Sintaxis y Compilador):
+  Responsable de la ampliación de la gramática BNF (`snake_evolved.bnf`) para 
+  integrar bloques `LEVELS` y atributos opcionales de formas geométricas. 
+  Lideró la modificación del Lexer y Parser en `compiler.py` para soportar el 
+  tokenizado de números decimales (ej. velocidades de tick) y el mapeo dinámico 
+  de propiedades a nivel de árbol de sintaxis abstracta (AST).
+
+- SANTIAGO VILLAMIZAR (Arquitectura del Motor y Manejador de Niveles):
+  Diseñó e implementó la clase `Juego` en `runtime.py`, estructurando el 
+  "Manejador de Estados" encargado de administrar los 3 niveles de dificultad 
+  (Baby, Entusiasta y Nyan Cat). Configuró el ajuste automático en tiempo real 
+  de las velocidades de tick (`velocidad_gravedad`) y la lógica de inicialización 
+  y limpieza de entidades al cambiar de dificultad.
+
+- MAGDIEL SANTIAGO GIL (Sistema Gráfico y Renderizado de Formas):
+  Desarrolló toda la lógica visual de renderizado en Canvas (`dibujar_celda`). 
+  Implementó la representación geométrica de los segmentos (`CIRCLE` y `TRIANGLE`), 
+  la cabeza especial Nyan Cat utilizando el emoji premium `😺`, las nubes 
+  obstáculo `☁️` y el efecto dinámico multicolor de espectro arcoíris para la 
+  cola del reptil utilizando operadores de módulo.
+
+- SEBASTIAN ALVAREZ (Lógica de Colisiones y Sistema de Inputs Robustos):
+  Implementó la lógica avanzada de colisión en `snake_mover_jugador`. Desarrolló 
+  las reglas de supervivencia en Nyan Cat (pérdida de puntos pero manteniéndose 
+  con vida), así como el validador físico de giros (`serpiente_direccion_actual`) 
+  en `snake_cambiar_direccion` para mitigar el bug de suicidios de 180° por 
+  inputs rápidos del teclado.
+
+- ANDRES FELIPE (Manejador de Power-Ups e Invulnerabilidad):
+  Diseñó la lógica de invulnerabilidad temporal del power-up `IMMORTAL_FRUIT`, 
+  integrando la tasa de spawn dinámico basada en la propiedad `CHANCE` de la DSL. 
+  Creó la interfaz de visualización con precisión decimal (timer real en 
+  sidebar de Tkinter), programó el shimmering dorado visual y lideró la suite 
+  de pruebas de retrocompatibilidad con los archivos `.brick` originales.
+
+------------------------------------------------------------------------
+2. DETALLE DE IMPLEMENTACIÓN TÉCNICA
+------------------------------------------------------------------------
+
+A. Personalización Geométrica de la Serpiente
+- Gramática Extendida: Se introdujo la regla opcional "FORM <tipo_forma>" en 
+  la gramática BNF.
+- Renderizado de Formas: En `runtime.py`, el método `dibujar_celda()` fue
+  modificado para soportar formas geométricas:
+  * "CIRCLE": Renderizado usando `canvas.create_oval()`.
+  * "TRIANGLE": Renderizado como polígono apuntando hacia arriba 
+    usando `canvas.create_polygon()`.
+  * "RECTANGLE": Comportamiento por defecto usando `canvas.create_rectangle()`.
+- Cabeza de Gato (Nyan Cat): En el nivel Nyan Cat, la cabeza se dibuja 
+  dinámicamente usando el emoji premium "😺" centrado con `create_text()`.
+- Cola Arcoíris: Al estar en el nivel Nyan Cat, se define una lista de colores 
+  de espectro arcoíris. Cada segmento de la cola toma un color aplicando la 
+  operación módulo al índice del segmento (`rainbow_colors[i % len(rainbow_colors)]`).
+
+B. Sistema de Frutas y Obstáculos
+- Frutas Venenosas (POISON_FRUIT): En niveles Entusiasta y Nyan Cat, aparecen
+  frutas de color púrpura. Al consumirlas, restan 10 puntos al jugador. Si los
+  puntos llegan a 0 y se consume otra fruta venenosa, el juego termina.
+- Nubes Obstáculo (CLOUD): Aparecen únicamente en el nivel Nyan Cat como 
+  entidades fijas (representadas por el emoji "☁️"). Colisionar con ellas 
+  provoca la pérdida total de puntos. Si el jugador tiene 0 puntos al 
+  colisionar con una nube, el juego termina inmediatamente (GAME_OVER).
+- Power-Up de Invulnerabilidad (IMMORTAL_FRUIT): Fruta dorada que otorga 
+  invulnerabilidad temporal durante los segundos definidos en la propiedad 
+  `DURATION` (5 segundos en `snake_evolved.brick`).
+  * Balance y Probabilidad Dinámica: Anteriormente se utilizaba una probabilidad
+    fija del 25% (haciendo que el Power-Up apareciera con demasiada frecuencia).
+    Se ha rediseñado para que use el atributo `CHANCE` definido en el bloque 
+    `DEFINE POWERUP` en el archivo `.brick`. Por defecto, tiene un valor balanceado
+    de 10% de probabilidad (chance=10), lo que significa que el powerup aparece
+    en promedio una vez por cada 10 manzanas normales comidas, haciéndolo sentir 
+    como una recompensa especial y equilibrada.
+  * Visualización: El estado cambia a "¡INVENCIBLE!" en el panel lateral y
+    muestra un contador de tiempo real de precisión decimal (ej: `(4.2s)`).
+    Además, la serpiente brilla en color dorado/naranja en el área de juego.
+
+C. Lógica de Niveles y Transiciones
+Se implementó un State Manager robusto que transiciona dinámicamente:
+- Baby (Score < 20): Velocidad moderada (TICK de 0.2s). Sin obstáculos ni veneno.
+- Entusiasta (20 <= Score < 50): Velocidad intermedia (TICK de 0.15s). Se activan 
+  las frutas venenosas y el Power-Up de invulnerabilidad.
+- Nyan Cat (Score >= 50): Velocidad máxima (TICK de 0.07s). Se activan las nubes 
+  obstáculo, la cola multicolor arcoíris, y la cabeza de gato.
+- Depuración / Transición Manual: El motor reconoce las teclas '1', '2' y '3' 
+  para cambiar instantáneamente entre Baby, Entusiasta y Nyan Cat (ajustando la 
+  puntuación correspondiente al nivel de forma segura).
+
+D. Manejo de Colisiones en Nyan Cat
+- En el nivel Nyan Cat, "Si hay colisión se pierden todos los puntos, pero 
+  sigue vivo. Si hay colisión y no tiene puntos, game over".
+- Esto se aplica a colisiones contra paredes (las cuales provocan que la 
+  serpiente aparezca al lado opuesto del grid, "wrap-around", y reducen los 
+  puntos a 0), colisiones contra sí misma (reducen los puntos a 0) y colisiones 
+  con nubes (reducen los puntos a 0). Si los puntos ya son 0 al colisionar, 
+  se ejecuta el fin de la partida.
+
+E. Sistemas de Estabilidad e Inputs Rápidos (Corrección de Bugs)
+Para evitar muertes injustas y cierres prematuros de juego por combinación
+de teclas rápidas, se implementó la siguiente robustez:
+1. Validador de Dirección Física (Anti 180-grados):
+   - Problema: Si el usuario presionaba múltiples flechas de dirección muy rápido 
+     dentro de un mismo tick de reloj, podía burlar la validación y girar en 180° 
+     hacia su propio cuello, causándose un suicidio por autocolisión injusto.
+   - Solución: Se introdujo `self.serpiente_direccion_actual` para registrar el
+     movimiento físico real realizado en el tick anterior. Cualquier cambio de 
+     dirección de input se valida estrictamente contra este movimiento físico real, 
+     bloqueando de raíz giros suicidas de 180 grados en el mismo tick. Esto permite
+     bajar o subir de nivel de forma manual e ingresar comandos de flechas de 
+     forma instantánea con total seguridad.
+
+------------------------------------------------------------------------
+3. ANÁLISIS DE RETROCOMPATIBILIDAD
+------------------------------------------------------------------------
+Se garantiza que cualquier archivo `.brick` de la versión original se compila
+y ejecuta sin sufrir modificaciones ni generar errores:
+1. Bloque LEVELS Opcional: Si el compilador no encuentra la sección `LEVELS`, 
+   el archivo JSON de salida simplemente no la contendrá. El runtime.py maneja
+   esto interpretando la ausencia del bloque como que el nivel es "Baby" y 
+   asignando la velocidad original de tick por defecto (0.2s o 0.15s).
+2. Definición de Atributos Opcionales: Las propiedades `FORM`, `COLOR`, `EFFECT` 
+   y `DURATION` son completamente opcionales en el analizador sintáctico. 
+   Cualquier definición de shape clásica sin estas propiedades carga valores 
+   por defecto de forma retrocompatible.
+3. Elementos Faltantes de Juego: Si el juego original no define `POISON_FRUIT`, 
+   `CLOUD` o `IMMORTAL_FRUIT`, el motor nunca las spawneará en el tablero y 
+   el juego operará bajo las reglas tradicionales de Snake de forma transparente.
+
+========================================================================
