@@ -1057,7 +1057,8 @@ class Juego:
             {
                 "x": x,
                 "y": y,
-                "hp": 50
+                "hp": 50,
+                "damage": 10
             }
         )
 
@@ -1070,7 +1071,7 @@ class Juego:
             )
 
             dy = random.choice(
-                [0, 1]
+                [-1, 0, 1,]
             )
 
             nuevo_x = enemigo["x"] + dx
@@ -1119,7 +1120,8 @@ class Juego:
                 "x": x,
                 "y": 1,
                 "hp": 100,
-                "speed": 2
+                "speed": 2,
+                "damage": 10
             }
         )
 
@@ -1176,7 +1178,7 @@ class Juego:
                 0,
                 self.alto - 1
             )
-
+        
         )
 
     def tanks_verificar_colisiones(self):
@@ -1201,7 +1203,7 @@ class Juego:
                     impacto = True
 
                     if self.boss_hp <= 0:
-                    
+
                         self.boss_activo = False
 
                         tkMessageBox.showinfo(
@@ -1252,18 +1254,6 @@ class Juego:
                         self.puntuacion += 100
 
                     break
-            for bala in self.balas_enemigos:
-
-                if (
-                    bala["x"] == self.player_x and
-                    bala["y"] == self.player_y
-                ):
-
-                    self.player_hp -= 50
-
-                    if self.player_hp <= 0:
-                    
-                        self.juego_terminado = True
 
             if not impacto:
 
@@ -1272,6 +1262,51 @@ class Juego:
                 )
 
         self.balas_jugador = balas_restantes
+
+        # Colisiones balas enemigas -> jugador
+
+        for bala in self.balas_enemigos:
+
+            if (
+                bala["x"] == self.player_x and
+                bala["y"] == self.player_y
+            ):
+
+                self.player_hp -= 50
+
+                if self.player_hp <= 0:
+
+                    self.juego_terminado = True
+
+        # Colisiones enemigos normales -> jugador
+
+        for enemigo in self.enemigos:
+
+            if (
+                enemigo["x"] == self.player_x and
+                enemigo["y"] == self.player_y
+            ):
+
+                self.player_hp -= enemigo["damage"]
+
+                if self.player_hp <= 0:
+
+                    self.juego_terminado = True
+
+        # Colisiones enemigos rápidos -> jugador
+
+        for enemigo in self.enemigos_rapidos:
+
+            if (
+                enemigo["x"] == self.player_x and
+                enemigo["y"] == self.player_y
+            ):
+
+                self.player_hp -= enemigo["damage"]
+
+                if self.player_hp <= 0:
+
+                    self.juego_terminado = True
 
     def tanks_game_tick(self):
         
