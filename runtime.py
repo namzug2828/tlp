@@ -1066,46 +1066,69 @@ class Juego:
 
         for enemigo in self.enemigos:
 
-            dx = random.choice(
-                [-1, 0, 1]
-            )
-
-            dy = random.choice(
-                [-1, 0, 1,]
-            )
+            # 70% del tiempo se mueven hacia el jugador
+            if random.random() < 0.7:
+                dx = 0
+                dy = 0
+                if self.player_x > enemigo["x"]:
+                    dx = 1
+                elif self.player_x < enemigo["x"]:
+                    dx = -1
+                if self.player_y > enemigo["y"]:
+                    dy = 1
+                elif self.player_y < enemigo["y"]:
+                    dy = -1
+                # Moverse solo en un eje por tick para evitar diagonal perfecta
+                if dx != 0 and dy != 0:
+                    if random.random() < 0.5:
+                        dy = 0
+                    else:
+                        dx = 0
+            else:
+                dx = random.choice([-1, 0, 1])
+                dy = random.choice([-1, 0, 1])
 
             nuevo_x = enemigo["x"] + dx
             nuevo_y = enemigo["y"] + dy
 
             if 0 <= nuevo_x < self.ancho:
-
                 enemigo["x"] = nuevo_x
 
             if 0 <= nuevo_y < self.alto:
-
                 enemigo["y"] = nuevo_y
     
     def tanks_actualizar_enemigos_rapidos(self):
 
         for enemigo in self.enemigos_rapidos:
-        
-            dx = random.choice(
-                [-1, 0, 1]
-            )
-    
-            dy = random.choice(
-                [0, 1]
-            )
-    
+
+            # 90% del tiempo persiguen al jugador (más agresivos)
+            if random.random() < 0.9:
+                dx = 0
+                dy = 0
+                if self.player_x > enemigo["x"]:
+                    dx = 1
+                elif self.player_x < enemigo["x"]:
+                    dx = -1
+                if self.player_y > enemigo["y"]:
+                    dy = 1
+                elif self.player_y < enemigo["y"]:
+                    dy = -1
+                if dx != 0 and dy != 0:
+                    if random.random() < 0.5:
+                        dy = 0
+                    else:
+                        dx = 0
+            else:
+                dx = random.choice([-1, 0, 1])
+                dy = random.choice([0, 1])
+
             nuevo_x = enemigo["x"] + dx
             nuevo_y = enemigo["y"] + dy
-    
+
             if 0 <= nuevo_x < self.ancho:
-            
                 enemigo["x"] = nuevo_x
-    
+
             if 0 <= nuevo_y < self.alto:
-            
                 enemigo["y"] = nuevo_y
 
     def tanks_spawn_fast_enemy(self):
@@ -1129,31 +1152,61 @@ class Juego:
 
         for enemigo in self.enemigos:
 
-            if random.randint(1,5) == 1:
+            if random.randint(1, 15) == 1:
 
-                self.balas_enemigos.append(
-                    {
-                        "x": enemigo["x"],
-                        "y": enemigo["y"] + 1,
-                        "dx": 0,
-                        "dy": 1
-                    }
-                )
+                # Calcular dirección hacia el jugador
+                dx = 0
+                dy = 0
+                if self.player_x > enemigo["x"]:
+                    dx = 1
+                elif self.player_x < enemigo["x"]:
+                    dx = -1
+                if self.player_y > enemigo["y"]:
+                    dy = 1
+                elif self.player_y < enemigo["y"]:
+                    dy = -1
+                # Disparar en un solo eje (el que tenga mayor distancia)
+                if abs(self.player_x - enemigo["x"]) >= abs(self.player_y - enemigo["y"]):
+                    dy = 0
+                else:
+                    dx = 0
+
+                if dx != 0 or dy != 0:
+                    self.balas_enemigos.append({
+                        "x": enemigo["x"] + dx,
+                        "y": enemigo["y"] + dy,
+                        "dx": dx,
+                        "dy": dy
+                    })
 
     def tanks_disparo_enemigos_rapidos(self):
 
         for enemigo in self.enemigos_rapidos:
-        
-            if random.randint(1,5) == 1:
-            
-                self.balas_enemigos.append(
-                    {
-                        "x": enemigo["x"],
-                        "y": enemigo["y"] + 1,
-                        "dx": 0,
-                        "dy": 1
-                    }
-                )
+
+            if random.randint(1, 10) == 1:
+
+                dx = 0
+                dy = 0
+                if self.player_x > enemigo["x"]:
+                    dx = 1
+                elif self.player_x < enemigo["x"]:
+                    dx = -1
+                if self.player_y > enemigo["y"]:
+                    dy = 1
+                elif self.player_y < enemigo["y"]:
+                    dy = -1
+                if abs(self.player_x - enemigo["x"]) >= abs(self.player_y - enemigo["y"]):
+                    dy = 0
+                else:
+                    dx = 0
+
+                if dx != 0 or dy != 0:
+                    self.balas_enemigos.append({
+                        "x": enemigo["x"] + dx,
+                        "y": enemigo["y"] + dy,
+                        "dx": dx,
+                        "dy": dy
+                    })
 
     def tanks_spawn_boss(self):
 
@@ -1263,7 +1316,8 @@ class Juego:
 
         self.balas_jugador = balas_restantes
 
-        # Colisiones balas enemigas -> jugador
+        # Colisiones balas enemigas -> jugador (se consumen al impactar)
+        balas_enemigas_restantes = []
 
         for bala in self.balas_enemigos:
 
@@ -1272,40 +1326,47 @@ class Juego:
                 bala["y"] == self.player_y
             ):
 
-                self.player_hp -= 50
+                self.player_hp -= 25
 
                 if self.player_hp <= 0:
-
+                    self.player_hp = 0
                     self.juego_terminado = True
+                # bala se consume, no se agrega
 
-        # Colisiones enemigos normales -> jugador
+            else:
+                balas_enemigas_restantes.append(bala)
+
+        self.balas_enemigos = balas_enemigas_restantes
+
+        # Colisiones por contacto directo enemigo -> jugador
+        danio_contacto = False
 
         for enemigo in self.enemigos:
 
             if (
+                not danio_contacto and
                 enemigo["x"] == self.player_x and
                 enemigo["y"] == self.player_y
             ):
-
                 self.player_hp -= enemigo["damage"]
+                danio_contacto = True
 
                 if self.player_hp <= 0:
-
+                    self.player_hp = 0
                     self.juego_terminado = True
-
-        # Colisiones enemigos rápidos -> jugador
 
         for enemigo in self.enemigos_rapidos:
 
             if (
+                not danio_contacto and
                 enemigo["x"] == self.player_x and
                 enemigo["y"] == self.player_y
             ):
-
                 self.player_hp -= enemigo["damage"]
+                danio_contacto = True
 
                 if self.player_hp <= 0:
-
+                    self.player_hp = 0
                     self.juego_terminado = True
 
     def tanks_game_tick(self):
@@ -1350,6 +1411,10 @@ class Juego:
         self.tanks_actualizar_enemigos()
 
         self.tanks_actualizar_enemigos_rapidos()
+
+        self.tanks_disparo_enemigos()
+
+        self.tanks_disparo_enemigos_rapidos()
 
         self.tanks_verificar_colisiones()
 
