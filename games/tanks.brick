@@ -1,0 +1,173 @@
+GAME_TYPE TANKS
+
+GAME_GRID (18, 18)
+
+# ------------------------------
+# TANQUE JUGADOR
+# ------------------------------
+
+DEFINE SHAPE PLAYER_TANK:
+  COLOR: #0000FF
+  TYPE: PLAYER
+  HP: 100
+  DAMAGE: 50
+
+  STATE 1:
+    [1,1]
+    [1,1]
+END
+
+# ------------------------------
+# ENEMIGOS
+# ------------------------------
+
+DEFINE SHAPE ENEMY_TANK:
+  COLOR: #FF0000
+  TYPE: ENEMY
+  HP: 50
+  DAMAGE: 50
+
+  STATE 1:
+    [1,1]
+    [1,1]
+END
+
+DEFINE SHAPE FAST_ENEMY:
+  COLOR: #FFA500
+  TYPE: ENEMY
+  HP: 100
+  DAMAGE: 50
+  SPEED: 2
+
+  STATE 1:
+    [1,1]
+    [1,1]
+END
+
+# ------------------------------
+# PROYECTIL
+# ------------------------------
+
+DEFINE SHAPE BULLET:
+  COLOR: #FFFF00
+  TYPE: PROJECTILE
+
+  STATE 1:
+    [1]
+END
+
+# ------------------------------
+# MURO
+# ------------------------------
+
+DEFINE SHAPE WALL:
+  COLOR: #888888
+  TYPE: WALL
+
+  STATE 1:
+    [1]
+END
+
+# ------------------------------
+# POWERUP
+# ------------------------------
+
+DEFINE POWERUP HAMMER:
+  COLOR: #00FF00
+
+  STATE 1:
+    [1]
+END
+
+# ------------------------------
+# JEFE FINAL
+# ------------------------------
+
+BOSS FINAL_FORTRESS
+
+  COLOR: #800080
+
+  HP: 200
+
+  DAMAGE: 100
+
+  STATE 1:
+    [1,1,1,1,1]
+    [1,0,0,0,1]
+    [1,1,1,1,1]
+    [1,0,1,0,1]
+    [1,1,1,1,1]
+
+END
+
+# ------------------------------
+# INICIO
+# ------------------------------
+
+ON START:
+
+  SPAWN PLAYER_TANK AT (10,16)
+
+  SPAWN ENEMY_TANK AT (5,2)
+
+  SPAWN ENEMY_TANK AT (10,2)
+
+  SPAWN ENEMY_TANK AT (15,2)
+
+END
+
+# ------------------------------
+# MOVIMIENTO
+# ------------------------------
+
+ON KEY_LEFT:
+  MOVE PLAYER LEFT
+END
+
+ON KEY_RIGHT:
+  MOVE PLAYER RIGHT
+END
+
+ON KEY_UP:
+  MOVE PLAYER UP
+END
+
+ON KEY_DOWN:
+  MOVE PLAYER DOWN
+END
+
+# ------------------------------
+# DISPARO
+# ------------------------------
+
+ON KEY_SPACE:
+  SPAWN BULLET
+END
+
+# ------------------------------
+# PUNTOS
+# ------------------------------
+
+ON ENEMY_DESTROYED:
+  INCREASE_SCORE 100
+END
+
+# ------------------------------
+# MARTILLO
+# ------------------------------
+
+ON TIMER:
+  SPAWN HAMMER
+END
+
+# ------------------------------
+# JEFE FINAL
+# ------------------------------
+
+ON TARGET_SCORE:
+  SPAWN FINAL_FORTRESS
+END
+
+ON BOSS_DEFEATED:
+  GAME_OVER
+END

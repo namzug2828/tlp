@@ -18,14 +18,15 @@ class Parser:
         self.tokens = tokens
         self.posicion = 0
         self.ast = {
-                    "tipo_juego": None, 
-                    "config": {}, 
-                    "shapes": {}, 
-                    "foods": {},
-                    "obstacles": {},
-                    "powerups": {},
-                    "levels": {},
-                    "events": {}
+            "tipo_juego": None,
+            "config": {},
+            "shapes": {},
+            "foods": {},
+            "obstacles": {},
+            "powerups": {},
+            "levels": {},
+            "boss": {},
+            "events": {}
         }
 
     def parse(self):
@@ -41,6 +42,9 @@ class Parser:
                 self.parsear_evento()
             elif token_actual == 'LEVELS':
                 self.parsear_levels()
+
+            elif token_actual == 'BOSS':
+                self.parsear_boss()
             
             else:
                 self.posicion += 1
@@ -85,9 +89,22 @@ class Parser:
         chance = 10
         effect = None
         duration = None
+        tipo_entidad = None
+        hp = None
+        damage = None
+        speed = None
         
         # Parsear atributos opcionales COLOR y CHANCE
-        while self.posicion < len(self.tokens) and self.tokens[self.posicion] in ['COLOR', 'CHANCE', 'EFFECT', 'DURATION']:
+        while self.posicion < len(self.tokens) and self.tokens[self.posicion] in [
+                                                                                    'COLOR',
+                                                                                    'CHANCE',
+                                                                                    'EFFECT',
+                                                                                    'DURATION',
+                                                                                    'TYPE',
+                                                                                    'HP', 
+                                                                                    'DAMAGE',
+                                                                                    'SPEED'
+                                                                                  ]:
             attr = self.consumir()
             self.consumir(':')
             val = self.consumir()
@@ -102,6 +119,18 @@ class Parser:
 
             elif attr == 'DURATION':
                  duration = int(val)
+
+            elif attr == 'TYPE':
+                 tipo_entidad = val
+
+            elif attr == 'HP':
+                 hp = int(val)
+
+            elif attr == 'DAMAGE':
+                 damage = int(val)
+
+            elif attr == 'SPEED':
+                 speed = int(val)
                 
         estados = []
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'STATE':
@@ -122,10 +151,21 @@ class Parser:
         
         # Guardar en la coleccion correspondiente
         datos = {
+
             "form": forma,
             "color": color,
             "chance": chance,
+
+            "type": tipo_entidad,
+
+            "hp": hp,
+
+            "damage": damage,
+
+            "speed": speed,
+
             "states": estados,
+
             "effect": effect,
             "duration": duration
         }
@@ -189,6 +229,8 @@ class Parser:
             if verbo == 'GAME_OVER':
                 acciones.append({'accion': verbo, 'objeto': None, 'params': []})
                 continue
+
+            #if verbo == 'VICTORY':
             
             # Si no, parseamos el resto de la accion
             objeto = self.consumir()
@@ -209,6 +251,82 @@ class Parser:
             acciones.append({'accion': verbo, 'objeto': objeto, 'params': params})
         self.consumir('END')
         self.ast['events'][nombre_evento] = acciones
+
+    def parsear_boss(self):
+
+        self.consumir('BOSS')
+
+        nombre = self.consumir()
+
+        color = "#FF00FF"
+        hp = 100
+        damage = 50
+
+        while self.tokens[self.posicion] in [
+            'COLOR',
+            'HP',
+            'DAMAGE'
+        ]:
+
+            atributo = self.consumir()
+
+            self.consumir(':')
+
+            valor = self.consumir()
+
+            if atributo == 'COLOR':
+                color = valor
+
+            elif atributo == 'HP':
+                hp = int(valor)
+
+            elif atributo == 'DAMAGE':
+                damage = int(valor)
+
+        estados = []
+
+        while self.tokens[self.posicion] == 'STATE':
+
+            self.consumir('STATE')
+
+            self.consumir()
+
+            self.consumir(':')
+
+            matriz = []
+
+            while self.tokens[self.posicion] == '[':
+
+                fila = []
+
+                self.consumir('[')
+
+                while self.tokens[self.posicion] != ']':
+                    fila.append(int(self.consumir()))
+
+                    if self.tokens[self.posicion] == ',':
+                        self.consumir(',')
+
+                self.consumir(']')
+
+                matriz.append(fila)
+
+            estados.append(matriz)
+
+        self.consumir('END')
+
+        self.ast["boss"] = {
+
+            "name": nombre,
+
+            "color": color,
+
+            "hp": hp,
+
+            "damage": damage,
+
+            "states": estados
+        }
 
 def generar_codigo(ast, archivo_salida):
     with open(archivo_salida, 'w') as f:

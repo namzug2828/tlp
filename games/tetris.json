@@ -1,7 +1,9 @@
 {
   "shapes": {
     "Z_PIECE": {
+      "form": "RECTANGLE", 
       "color": "#FF0000", 
+      "effect": null, 
       "states": [
         [
           [
@@ -72,10 +74,13 @@
           ]
         ]
       ], 
-      "chance": 10
+      "chance": 10, 
+      "duration": null
     }, 
     "V_PIECE": {
+      "form": "RECTANGLE", 
       "color": "#33FFCC", 
+      "effect": null, 
       "states": [
         [
           [
@@ -129,10 +134,13 @@
           ]
         ]
       ], 
-      "chance": 8
+      "chance": 8, 
+      "duration": null
     }, 
     "S_PIECE": {
+      "form": "RECTANGLE", 
       "color": "#00FF00", 
+      "effect": null, 
       "states": [
         [
           [
@@ -203,10 +211,13 @@
           ]
         ]
       ], 
-      "chance": 10
+      "chance": 10, 
+      "duration": null
     }, 
     "L_PIECE": {
+      "form": "RECTANGLE", 
       "color": "#FF9F00", 
+      "effect": null, 
       "states": [
         [
           [
@@ -277,10 +288,13 @@
           ]
         ]
       ], 
-      "chance": 10
+      "chance": 10, 
+      "duration": null
     }, 
     "P_PIECE": {
+      "form": "RECTANGLE", 
       "color": "#FF3399", 
+      "effect": null, 
       "states": [
         [
           [
@@ -351,10 +365,13 @@
           ]
         ]
       ], 
-      "chance": 8
+      "chance": 8, 
+      "duration": null
     }, 
     "T_PIECE": {
+      "form": "RECTANGLE", 
       "color": "#A000F0", 
+      "effect": null, 
       "states": [
         [
           [
@@ -425,10 +442,13 @@
           ]
         ]
       ], 
-      "chance": 10
+      "chance": 10, 
+      "duration": null
     }, 
     "I_PIECE": {
+      "form": "RECTANGLE", 
       "color": "#00FFFF", 
+      "effect": null, 
       "states": [
         [
           [
@@ -535,10 +555,13 @@
           ]
         ]
       ], 
-      "chance": 10
+      "chance": 10, 
+      "duration": null
     }, 
     "O_PIECE": {
+      "form": "RECTANGLE", 
       "color": "#FFFF00", 
+      "effect": null, 
       "states": [
         [
           [
@@ -609,10 +632,29 @@
           ]
         ]
       ], 
-      "chance": 10
+      "chance": 10, 
+      "duration": null
     }
   }, 
+  "foods": {}, 
   "tipo_juego": "TETRIS", 
+  "powerups": {
+    "GEM_POWERUP": {
+      "form": "RECTANGLE", 
+      "color": "#FFD700", 
+      "effect": null, 
+      "states": [
+        [
+          [
+            1
+          ]
+        ]
+      ], 
+      "chance": 0, 
+      "duration": null
+    }
+  }, 
+  "obstacles": {}, 
   "config": {
     "grid_size": [
       10, 
@@ -678,17 +720,5 @@
       }
     ]
   }, 
-  "powerups": {
-    "GEM_POWERUP": {
-      "color": "#FFD700", 
-      "states": [
-        [
-          [
-            1
-          ]
-        ]
-      ], 
-      "chance": 0
-    }
-  }
+  "levels": {}
 }

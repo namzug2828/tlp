@@ -1,23 +1,24 @@
 {
   "shapes": {
     "SNAKE_HEAD": {
+      "states": [
+        [
+          [
+            1
+          ]
+        ]
+      ], 
+      "duration": null, 
+      "chance": 10, 
       "form": "CIRCLE", 
       "color": "#00FFFF", 
-      "effect": null, 
-      "states": [
-        [
-          [
-            1
-          ]
-        ]
-      ], 
-      "chance": 10, 
-      "duration": null
+      "speed": null, 
+      "hp": null, 
+      "type": null, 
+      "damage": null, 
+      "effect": null
     }, 
     "SNAKE_BODY": {
-      "form": "TRIANGLE", 
-      "color": "#00FFFF", 
-      "effect": null, 
       "states": [
         [
           [
@@ -25,47 +26,70 @@
           ]
         ]
       ], 
+      "duration": null, 
       "chance": 10, 
-      "duration": null
+      "form": "TRIANGLE", 
+      "color": "#00FFFF", 
+      "speed": null, 
+      "hp": null, 
+      "type": null, 
+      "damage": null, 
+      "effect": null
     }
   }, 
   "foods": {
     "APPLE": {
+      "states": [], 
+      "duration": null, 
+      "chance": 10, 
       "form": "CIRCLE", 
       "color": "#FF0000", 
-      "effect": "GROW", 
-      "states": [], 
-      "chance": 10, 
-      "duration": null
+      "speed": null, 
+      "hp": null, 
+      "type": null, 
+      "damage": null, 
+      "effect": "GROW"
     }, 
     "POISON_FRUIT": {
+      "states": [], 
+      "duration": null, 
+      "chance": 10, 
       "form": "CIRCLE", 
       "color": "#9900FF", 
-      "effect": null, 
-      "states": [], 
-      "chance": 10, 
-      "duration": null
+      "speed": null, 
+      "hp": null, 
+      "type": null, 
+      "damage": null, 
+      "effect": null
     }
   }, 
   "tipo_juego": "SNAKE", 
   "powerups": {
     "IMMORTAL_FRUIT": {
+      "states": [], 
+      "duration": 5, 
+      "chance": 10, 
       "form": "CIRCLE", 
       "color": "#FFFF00", 
-      "effect": null, 
-      "states": [], 
-      "chance": 10, 
-      "duration": 5
+      "speed": null, 
+      "hp": null, 
+      "type": null, 
+      "damage": null, 
+      "effect": null
     }
   }, 
   "obstacles": {
     "CLOUD": {
+      "states": [], 
+      "duration": null, 
+      "chance": 10, 
       "form": "CLOUD", 
       "color": "#CCCCCC", 
-      "effect": null, 
-      "states": [], 
-      "chance": 10, 
-      "duration": null
+      "speed": null, 
+      "hp": null, 
+      "type": null, 
+      "damage": null, 
+      "effect": null
     }
   }, 
   "config": {
@@ -178,5 +202,6 @@
     "NYAN_CAT": {
       "speed": 60
     }
-  }
+  }, 
+  "boss": {}
 }

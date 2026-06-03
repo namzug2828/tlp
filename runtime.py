@@ -133,7 +133,37 @@ class Juego:
             self.nivel_actual = self.seleccionar_nivel()
             self.configurar_nivel()
 
-            
+        if self.tipo_juego == 'TANKS':
+
+            # Jugador
+            self.player_x = 0
+            self.player_y = 0
+
+            self.player_hp = 100
+
+            self.player_direccion = "UP"
+
+            # Enemigos
+            self.enemigos = []
+            self.enemigos_rapidos = []
+
+            # Balas
+            self.balas_jugador = []
+            self.balas_enemigos = []
+
+            # Powerup martillo
+            self.posicion_hammer = None
+
+            # Boss
+            self.boss_activo = False
+            self.boss_hp = 0
+            self.boss_x = 0
+            self.boss_y = 0
+
+            # Timer enemigos
+            self.timer_enemigos = 0   
+
+            self.velocidad_gravedad = 0.05
         
         self.timer_gravedad = 0
         self.ejecutar_evento('ON_START')
@@ -147,6 +177,11 @@ class Juego:
         self.root.mainloop() 
 
     def game_loop(self):
+
+        if self.tipo_juego == 'TANKS':
+
+            self.tanks_game_tick()
+
         if self.juego_terminado:
             self.mostrar_game_over()
             return
@@ -189,6 +224,31 @@ class Juego:
             elif key == 'LEFT': self.snake_cambiar_direccion('LEFT')
             elif key == 'RIGHT': self.snake_cambiar_direccion('RIGHT')
 
+        elif self.tipo_juego == 'TANKS':
+
+            if key == 'UP':
+
+                self.player_direccion = "UP"
+                self.tanks_mover_jugador(0, -1)
+
+            elif key == 'DOWN':
+            
+                self.player_direccion = "DOWN"
+                self.tanks_mover_jugador(0, 1)
+
+            elif key == 'LEFT':
+            
+                self.player_direccion = "LEFT"
+                self.tanks_mover_jugador(-1, 0)
+
+            elif key == 'RIGHT':
+            
+                self.player_direccion = "RIGHT"
+                self.tanks_mover_jugador(1, 0)
+
+            elif key == 'SPACE':
+
+                self.tanks_disparar()
 
     def seleccionar_nivel(self):
 
@@ -278,7 +338,13 @@ class Juego:
 
     def dibujar(self):
         self.canvas.delete("all") # Borrar todo en cada frame
-        self.label_score.config(text="PUNTUACION\n" + str(self.puntuacion))
+        texto = "PUNTUACION\n" + str(self.puntuacion)
+
+        if self.tipo_juego == 'TANKS':
+        
+            texto += "\n\nHP\n" + str(self.player_hp)
+
+        self.label_score.config(text=texto)
         
         # Colores
         COLOR_GRID_FIJA = '#343434' # Gris oscuro para las celdas fijadas (Tetris)
@@ -421,6 +487,71 @@ class Juego:
 
                 self.dibujar_celda(x, y, color, forma)
 
+        if self.tipo_juego == 'TANKS':
+
+            self.dibujar_celda(
+                self.player_x,
+                self.player_y,
+                "#0000FF"
+            )
+
+            for enemigo in self.enemigos:
+
+                self.dibujar_celda(
+                enemigo["x"],
+                enemigo["y"],
+                "#FF0000"
+                )
+
+            for enemigo in self.enemigos_rapidos:
+
+                self.dibujar_celda(
+                    enemigo["x"],
+                    enemigo["y"],
+                    "#FF8800"
+                )
+
+            for bala in self.balas_jugador:
+
+                self.dibujar_celda(
+                    bala["x"],
+                    bala["y"],
+                    "#FFFF00",
+                    "CIRCLE"
+                )
+
+            for bala in self.balas_enemigos:
+
+                self.dibujar_celda(
+                    bala["x"],
+                    bala["y"],
+                    "#FF00FF",
+                    "CIRCLE"
+                )
+
+            if self.posicion_hammer:
+
+                x, y = self.posicion_hammer
+
+                self.dibujar_celda(
+                    x,
+                    y,
+                    "#00FF00",
+                    "CIRCLE"
+                )
+            
+            if self.boss_activo:
+
+                for dy in range(5):
+                
+                    for dx in range(5):
+                    
+                        self.dibujar_celda(
+                            self.boss_x + dx,
+                            self.boss_y + dy,
+                            "#800080"
+                        )
+
     def dibujar_celda(self, x, y, color, forma="RECTANGLE"):
         ts = self.taman_celda
 
@@ -495,6 +626,29 @@ class Juego:
                     if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_manzana()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
                     if verbo == 'GROW': self.snake_crecer()
+
+                if self.tipo_juego == 'TANKS':
+
+                    if verbo == 'SPAWN':
+
+                        if objeto == 'PLAYER_TANK':
+                            self.tanks_spawn_player()
+
+                        elif objeto == 'ENEMY_TANK':
+                            self.tanks_spawn_enemy()
+
+                        elif objeto == 'BULLET':
+                            self.tanks_disparar()
+
+                    elif verbo == 'MOVE':
+
+                        if objeto == 'PLAYER':
+
+                            direccion = accion['params'][0]
+
+                            self.tanks_mover_jugador(
+                                direccion
+                            )
 
 
     # METODOS DE LOGICA DE JUEGO (MANTENIDOS DEL ARCHIVO ORIGINAL)
@@ -715,7 +869,7 @@ class Juego:
             self.serpiente_cuerpo[0]
         ]
 
-
+    
     def snake_mover_jugador(self):
         if self.inmune and time.time() > self.tiempo_inmunidad:
 
@@ -807,6 +961,365 @@ class Juego:
         pass
 
 
+
+    def tanks_spawn_player(self):
+
+        self.player_x = self.ancho // 2
+
+        self.player_y = self.alto - 2
+
+
+    def tanks_mover_jugador(self, dx, dy):
+
+        nuevo_x = self.player_x + dx
+        nuevo_y = self.player_y + dy
+
+        if 0 <= nuevo_x < self.ancho and \
+           0 <= nuevo_y < self.alto:
+
+            self.player_x = nuevo_x
+            self.player_y = nuevo_y
+
+    def tanks_disparar(self):
+
+        dx = 0
+        dy = 0
+
+        if self.player_direccion == "UP":
+            dy = -1
+
+        elif self.player_direccion == "DOWN":
+            dy = 1
+
+        elif self.player_direccion == "LEFT":
+            dx = -1
+
+        elif self.player_direccion == "RIGHT":
+            dx = 1
+
+        self.balas_jugador.append(
+            {
+                "x": self.player_x + dx,
+                "y": self.player_y + dy,
+                "dx": dx,
+                "dy": dy
+            }
+        )
+
+    def tanks_actualizar_balas(self):
+
+        nuevas_balas = []
+    
+        for bala in self.balas_jugador:
+        
+            bala["x"] += bala["dx"]
+    
+            bala["y"] += bala["dy"]
+    
+            if (
+                bala["x"] >= 0 and
+                bala["x"] < self.ancho and
+                bala["y"] >= 0 and
+                bala["y"] < self.alto
+            ):
+    
+                nuevas_balas.append(
+                    bala
+                )
+    
+        self.balas_jugador = nuevas_balas
+        nuevas = []
+
+        for bala in self.balas_enemigos:
+        
+            bala["x"] += bala["dx"]
+            bala["y"] += bala["dy"]
+
+            if (
+                0 <= bala["x"] < self.ancho and
+                0 <= bala["y"] < self.alto
+            ):
+
+                nuevas.append(bala)
+
+        self.balas_enemigos = nuevas
+
+    def tanks_spawn_enemy(self):
+
+        x = random.randint(
+            0,
+            self.ancho - 1
+        )
+
+        y = 1
+
+        self.enemigos.append(
+            {
+                "x": x,
+                "y": y,
+                "hp": 50
+            }
+        )
+
+    def tanks_actualizar_enemigos(self):
+
+        for enemigo in self.enemigos:
+
+            dx = random.choice(
+                [-1, 0, 1]
+            )
+
+            dy = random.choice(
+                [0, 1]
+            )
+
+            nuevo_x = enemigo["x"] + dx
+            nuevo_y = enemigo["y"] + dy
+
+            if 0 <= nuevo_x < self.ancho:
+
+                enemigo["x"] = nuevo_x
+
+            if 0 <= nuevo_y < self.alto:
+
+                enemigo["y"] = nuevo_y
+    
+    def tanks_actualizar_enemigos_rapidos(self):
+
+        for enemigo in self.enemigos_rapidos:
+        
+            dx = random.choice(
+                [-1, 0, 1]
+            )
+    
+            dy = random.choice(
+                [0, 1]
+            )
+    
+            nuevo_x = enemigo["x"] + dx
+            nuevo_y = enemigo["y"] + dy
+    
+            if 0 <= nuevo_x < self.ancho:
+            
+                enemigo["x"] = nuevo_x
+    
+            if 0 <= nuevo_y < self.alto:
+            
+                enemigo["y"] = nuevo_y
+
+    def tanks_spawn_fast_enemy(self):
+
+        x = random.randint(
+            0,
+            self.ancho - 1
+        )
+
+        self.enemigos_rapidos.append(
+            {
+                "x": x,
+                "y": 1,
+                "hp": 100,
+                "speed": 2
+            }
+        )
+
+    def tanks_disparo_enemigos(self):
+
+        for enemigo in self.enemigos:
+
+            if random.randint(1,5) == 1:
+
+                self.balas_enemigos.append(
+                    {
+                        "x": enemigo["x"],
+                        "y": enemigo["y"] + 1,
+                        "dx": 0,
+                        "dy": 1
+                    }
+                )
+
+    def tanks_disparo_enemigos_rapidos(self):
+
+        for enemigo in self.enemigos_rapidos:
+        
+            if random.randint(1,5) == 1:
+            
+                self.balas_enemigos.append(
+                    {
+                        "x": enemigo["x"],
+                        "y": enemigo["y"] + 1,
+                        "dx": 0,
+                        "dy": 1
+                    }
+                )
+
+    def tanks_spawn_boss(self):
+
+        self.boss_activo = True
+
+        self.boss_hp = 200
+
+        self.boss_x = self.ancho // 2 - 2
+
+        self.boss_y = 1
+
+    def tanks_spawn_hammer(self):
+
+        self.posicion_hammer = (
+
+            random.randint(
+                0,
+                self.ancho - 1
+            ),
+
+            random.randint(
+                0,
+                self.alto - 1
+            )
+
+        )
+
+    def tanks_verificar_colisiones(self):
+
+        balas_restantes = []
+
+        for bala in self.balas_jugador:
+
+            impacto = False
+
+            if self.boss_activo:
+
+                if (
+                    bala["x"] >= self.boss_x and
+                    bala["x"] < self.boss_x + 5 and
+                    bala["y"] >= self.boss_y and
+                    bala["y"] < self.boss_y + 5
+                ):
+
+                    self.boss_hp -= 50
+
+                    impacto = True
+
+                    if self.boss_hp <= 0:
+                    
+                        self.boss_activo = False
+
+                        tkMessageBox.showinfo(
+                            "Victoria",
+                            "Boss derrotado"
+                        )
+
+                        self.juego_terminado = True
+
+            for enemigo in self.enemigos:
+
+                if (
+                    bala["x"] == enemigo["x"] and
+                    bala["y"] == enemigo["y"]
+                ):
+
+                    enemigo["hp"] -= 50
+
+                    impacto = True
+
+                    if enemigo["hp"] <= 0:
+
+                        self.enemigos.remove(
+                            enemigo
+                        )
+
+                        self.puntuacion += 100
+
+                    break
+
+            for enemigo in self.enemigos_rapidos:
+
+                if (
+                    bala["x"] == enemigo["x"] and
+                    bala["y"] == enemigo["y"]
+                ):
+
+                    enemigo["hp"] -= 50
+
+                    impacto = True
+
+                    if enemigo["hp"] <= 0:
+
+                        self.enemigos_rapidos.remove(
+                            enemigo
+                        )
+
+                        self.puntuacion += 100
+
+                    break
+            for bala in self.balas_enemigos:
+
+                if (
+                    bala["x"] == self.player_x and
+                    bala["y"] == self.player_y
+                ):
+
+                    self.player_hp -= 50
+
+                    if self.player_hp <= 0:
+                    
+                        self.juego_terminado = True
+
+            if not impacto:
+
+                balas_restantes.append(
+                    bala
+                )
+
+        self.balas_jugador = balas_restantes
+
+    def tanks_game_tick(self):
+        
+        self.timer_enemigos += 1
+
+        if self.timer_enemigos > 30:
+
+            self.timer_enemigos = 0
+
+            self.tanks_spawn_enemy()
+
+        if (
+            self.puntuacion >= 1000 and
+            not self.boss_activo
+        ):
+        
+            self.tanks_spawn_boss()
+
+        if random.randint(1,300) == 1:
+
+            self.tanks_spawn_hammer()
+
+        if self.posicion_hammer:
+
+            x, y = self.posicion_hammer
+
+            if (
+                self.player_x == x and
+                self.player_y == y
+            ):
+
+                self.player_hp += 25
+
+                if self.player_hp > 100:
+                    self.player_hp = 100
+
+                self.posicion_hammer = None
+
+        self.tanks_actualizar_balas()
+
+        self.tanks_actualizar_enemigos()
+
+        self.tanks_actualizar_enemigos_rapidos()
+
+        self.tanks_verificar_colisiones()
+
+    
+    
     # METODOS DE SALIDA (ADAPTADOS A GUI)
     # -----------------------------------
 
