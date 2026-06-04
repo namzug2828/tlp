@@ -542,6 +542,13 @@ class Juego:
             
             if self.boss_activo:
 
+                if self.boss_hp > 100:
+                    color_boss = "#800080"   # purpura - fase 1
+                elif self.boss_hp > 50:
+                    color_boss = "#FF0000"   # rojo - fase 2
+                else:
+                    color_boss = "#FF8800"   # naranja - fase 3
+
                 for dy in range(5):
                 
                     for dx in range(5):
@@ -549,7 +556,7 @@ class Juego:
                         self.dibujar_celda(
                             self.boss_x + dx,
                             self.boss_y + dy,
-                            "#800080"
+                            color_boss
                         )
 
     def dibujar_celda(self, x, y, color, forma="RECTANGLE"):
@@ -1191,11 +1198,61 @@ class Juego:
 
         self.boss_activo = True
 
-        self.boss_hp = 200
+        self.boss_hp = 1500
 
         self.boss_x = self.ancho // 2 - 2
 
         self.boss_y = 1
+
+        self.boss_timer = 0
+
+    def tanks_boss_tick(self):
+
+        if not self.boss_activo:
+            return
+
+        self.boss_timer += 1
+
+        # --- Fase 1: HP > 100, purpura, dispara en 4 direcciones cada 20 ticks ---
+        if self.boss_hp > 700:
+            cadencia = 20
+            direcciones = [(1,0),(-1,0),(0,1),(0,-1)]
+
+        # --- Fase 2: HP 51-100, rojo, dispara en 8 direcciones cada 15 ticks + se mueve ---
+        elif self.boss_hp > 200:
+            cadencia = 15
+            direcciones = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,1),(1,-1),(-1,-1)]
+
+            # Se mueve hacia el jugador lentamente cada 25 ticks
+            if self.boss_timer % 25 == 0:
+                if self.player_x > self.boss_x + 2:
+                    self.boss_x = min(self.boss_x + 1, self.ancho - 5)
+                elif self.player_x < self.boss_x + 2:
+                    self.boss_x = max(self.boss_x - 1, 0)
+
+        # --- Fase 3: HP <= 50, naranja, dispara en 8 direcciones cada 8 ticks + se mueve rapido ---
+        else:
+            cadencia = 8
+            direcciones = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,1),(1,-1),(-1,-1)]
+
+            # Se mueve mas rapido cada 15 ticks
+            if self.boss_timer % 15 == 0:
+                if self.player_x > self.boss_x + 2:
+                    self.boss_x = min(self.boss_x + 1, self.ancho - 5)
+                elif self.player_x < self.boss_x + 2:
+                    self.boss_x = max(self.boss_x - 1, 0)
+
+        # Disparar rafaga desde el centro del boss
+        if self.boss_timer % cadencia == 0:
+            centro_x = self.boss_x + 2
+            centro_y = self.boss_y + 2
+            for dx, dy in direcciones:
+                self.balas_enemigos.append({
+                    "x": centro_x + dx,
+                    "y": centro_y + dy,
+                    "dx": dx,
+                    "dy": dy
+                })
 
     def tanks_spawn_hammer(self):
 
@@ -1295,7 +1352,7 @@ class Juego:
 
         self.balas_jugador = balas_restantes
 
-        # Colisiones balas enemigas -> jugador (se consumen al impactar)
+        # Balas enemigas se consumen al impactar
         balas_enemigas_restantes = []
 
         for bala in self.balas_enemigos:
@@ -1314,7 +1371,7 @@ class Juego:
 
         self.balas_enemigos = balas_enemigas_restantes
 
-        # Colisiones por contacto: enemigo hace daño y muere
+        # Contacto enemigo -> jugador: enemigo muere y hace daño
         for enemigo in list(self.enemigos):
 
             if (
@@ -1388,6 +1445,8 @@ class Juego:
         self.tanks_disparo_enemigos()
 
         self.tanks_disparo_enemigos_rapidos()
+
+        self.tanks_boss_tick()
 
         self.tanks_verificar_colisiones()
 
