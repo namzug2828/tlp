@@ -122,7 +122,7 @@ class Juego:
             self.player_x = 0
             self.player_y = 0
 
-            self.player_hp = 100
+            self.player_hp = 200
 
             self.player_direccion = "UP"
 
@@ -498,7 +498,7 @@ class Juego:
                 self.dibujar_celda(
                     x,
                     y,
-                    "#00FF00",
+                    "#0DC99A",
                     "CIRCLE"
                 )
 
@@ -1356,7 +1356,7 @@ class Juego:
             self.enemigos_rapidos = []
             self.tanks_spawn_boss()
 
-        if random.randint(1,60) == 1:
+        if not self.boss_activo and random.randint(1,120) == 1:
 
             self.tanks_spawn_fast_enemy()
 
@@ -1374,9 +1374,6 @@ class Juego:
             ):
 
                 self.player_hp += 25
-
-                if self.player_hp > 100:
-                    self.player_hp = 100
 
                 self.posicion_hammer = None
 
