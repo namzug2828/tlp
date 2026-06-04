@@ -1,20 +1,13 @@
-# -*- coding: utf-8 -*-
-# runtime.py (VERSION CON INTERFAZ GRAFICA USANDO Tkinter y caracteres ASCII unicamente)
-
 import sys
 import json
 import time
 import random
-# Tkinter es la libreria GUI estandar de Python, compatible con 2.7 y 3
 try:
     import Tkinter as tk
     import tkMessageBox
 except ImportError:
     import tkinter as tk
     from tkinter import messagebox as tkMessageBox
-# Quitamos os y msvcrt ya que la GUI maneja el dibujo y el input
-# import os
-# import msvcrt 
 
 class Juego:
     def __init__(self, datos_juego):
@@ -26,37 +19,30 @@ class Juego:
         self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
         self.puntuacion = 0
         self.juego_terminado = False
-        
-        # --- Configuracion de la GUI ---
+
         self.root = tk.Tk()
         self.root.title("BrickScript - " + self.tipo_juego)
-        # Configurar la accion al cerrar la ventana ('X' de la barra de titulo)
         self.root.protocol("WM_DELETE_WINDOW", self.cerrar_ventana)
-        
-        self.taman_celda = 25 # Pixeles por celda
+
+        self.taman_celda = 25
         self.ancho_canvas = self.ancho * self.taman_celda
         self.alto_canvas = self.alto * self.taman_celda
-        
-        # Canvas para dibujar el juego
+
         self.canvas = tk.Canvas(self.root, width=self.ancho_canvas, height=self.alto_canvas, bg='#111111')
         self.canvas.pack(side=tk.LEFT, padx=10, pady=10)
 
-        # Marco lateral para la puntuacion y controles
         self.marco_score = tk.Frame(self.root, width=150, height=self.alto_canvas, bg='#222222')
         self.marco_score.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
-        
+
         self.label_score = tk.Label(self.marco_score, text="PUNTUACION\n0", bg='#222222', fg='white', font=('Consolas', 16, 'bold'))
         self.label_score.pack(pady=40, padx=10)
-        
+
         self.label_controles = tk.Label(self.marco_score, text="CONTROLES\nFlechas: Mover/Rotar", bg='#222222', fg='gray', font=('Consolas', 10))
         self.label_controles.pack(pady=20, padx=10)
 
-        
 
-        # Configurar eventos de teclado. Usamos <Key> para capturar cualquier tecla
         self.root.bind('<Key>', self.manejar_input_gui)
 
-        # Normalizar las shapes para asegurar retrocompatibilidad con JSONs antiguos
         self.shapes = {}
         for nombre, datos in self.datos_juego.get('shapes', {}).items():
             if isinstance(datos, list):
@@ -74,7 +60,6 @@ class Juego:
                     "form": datos.get("form", "RECTANGLE")
                 }
 
-        # Cargar los power-ups si existen
         self.powerups = {}
 
         for nombre, datos in self.datos_juego.get('powerups', {}).items():
@@ -88,15 +73,15 @@ class Juego:
                 "states": datos.get("states", []),
                 "form": datos.get("form", "RECTANGLE")
                 }
-            
+
         self.obstacles = {}
 
         for nombre, datos in self.datos_juego.get('obstacles', {}).items():
-        
+
             if isinstance(datos, dict):
-            
+
                 self.obstacles[nombre] = {
-                
+
                     "color": datos.get(
                         "color",
                         "#AAAAAA"
@@ -113,12 +98,11 @@ class Juego:
             self.pieza_x, self.pieza_y, self.pieza_rotacion = 0, 0, 0
             self.velocidad_gravedad = 0.4
             self.nombre_pieza_actual = None
-            
-            # Rastreadores para el spawning de Power-Ups
+
             self.lineas_3_simultaneas = False
-        
+
         if self.tipo_juego == 'SNAKE':
-            
+
             self.serpiente_cuerpo = []
             self.serpiente_direccion = (1, 0)
             self.posicion_manzana = None
@@ -135,7 +119,6 @@ class Juego:
 
         if self.tipo_juego == 'TANKS':
 
-            # Jugador
             self.player_x = 0
             self.player_y = 0
 
@@ -143,38 +126,31 @@ class Juego:
 
             self.player_direccion = "UP"
 
-            # Enemigos
             self.enemigos = []
             self.enemigos_rapidos = []
 
-            # Balas
             self.balas_jugador = []
             self.balas_enemigos = []
 
-            # Powerup martillo
             self.posicion_hammer = None
 
-            # Boss
             self.boss_activo = False
             self.boss_hp = 0
             self.boss_x = 0
             self.boss_y = 0
 
-            # Timer enemigos
-            self.timer_enemigos = 0   
+            self.timer_enemigos = 0
 
             self.velocidad_gravedad = 0.05
-        
+
         self.timer_gravedad = 0
         self.ejecutar_evento('ON_START')
-        self.timer_id = None # Para controlar el loop de Tkinter
+        self.timer_id = None
 
-        
 
     def run(self):
-        # Inicia el ciclo principal de juego de Tkinter
-        self.root.after(50, self.game_loop) 
-        self.root.mainloop() 
+        self.root.after(50, self.game_loop)
+        self.root.mainloop()
 
     def game_loop(self):
 
@@ -186,20 +162,16 @@ class Juego:
             self.mostrar_game_over()
             return
 
-        # Logica de TICK/Gravedad
-        # El loop se ejecuta cada 50ms (0.05 segundos)
-        self.timer_gravedad += 0.05 
+        self.timer_gravedad += 0.05
         if self.timer_gravedad >= self.velocidad_gravedad:
             self.timer_gravedad = 0
             self.ejecutar_evento('ON_TICK')
 
         self.dibujar()
 
-        # Programa el siguiente ciclo de juego
         self.timer_id = self.root.after(50, self.game_loop)
-        
+
     def cerrar_ventana(self):
-        # Detiene el loop de juego de forma segura
         if self.timer_id:
             self.root.after_cancel(self.timer_id)
         self.root.destroy()
@@ -208,17 +180,14 @@ class Juego:
 
     def manejar_input_gui(self, event):
         key = event.keysym.upper()
-        
-        # La opcion de salir con 'Q' ha sido eliminada.
-        
-        # Mapeo de teclas de flecha
+
+
         if self.tipo_juego == 'TETRIS':
             if key == 'UP': self.ejecutar_evento('ON_KEY_UP')
             elif key == 'DOWN': self.ejecutar_evento('ON_KEY_DOWN')
             elif key == 'LEFT': self.ejecutar_evento('ON_KEY_LEFT')
             elif key == 'RIGHT': self.ejecutar_evento('ON_KEY_RIGHT')
         elif self.tipo_juego == 'SNAKE':
-            # Llamamos a las funciones internas para Snake
             if key == 'UP': self.snake_cambiar_direccion('UP')
             elif key == 'DOWN': self.snake_cambiar_direccion('DOWN')
             elif key == 'LEFT': self.snake_cambiar_direccion('LEFT')
@@ -232,17 +201,17 @@ class Juego:
                 self.tanks_mover_jugador(0, -1)
 
             elif key == 'DOWN':
-            
+
                 self.player_direccion = "DOWN"
                 self.tanks_mover_jugador(0, 1)
 
             elif key == 'LEFT':
-            
+
                 self.player_direccion = "LEFT"
                 self.tanks_mover_jugador(-1, 0)
 
             elif key == 'RIGHT':
-            
+
                 self.player_direccion = "RIGHT"
                 self.tanks_mover_jugador(1, 0)
 
@@ -253,57 +222,57 @@ class Juego:
     def seleccionar_nivel(self):
 
         ventana = tk.Toplevel(self.root)
-    
+
         ventana.title("Seleccionar dificultad")
         ventana.geometry("300x200")
-    
+
         nivel = tk.StringVar()
         nivel.set("BABY")
-    
+
         tk.Label(
             ventana,
             text="Seleccione dificultad",
             font=("Consolas", 12)
         ).pack(pady=10)
-    
+
         tk.Radiobutton(
             ventana,
             text="Baby",
             variable=nivel,
             value="BABY"
         ).pack()
-    
+
         tk.Radiobutton(
             ventana,
             text="Enthusiast",
             variable=nivel,
             value="ENTHUSIAST"
         ).pack()
-    
+
         tk.Radiobutton(
             ventana,
             text="Nyan Cat",
             variable=nivel,
             value="NYAN_CAT"
         ).pack()
-    
+
         resultado = [None]
-    
+
         def aceptar():
             resultado[0] = nivel.get()
             ventana.destroy()
-    
+
         tk.Button(
             ventana,
             text="Jugar",
             command=aceptar
         ).pack(pady=15)
-    
+
         ventana.transient(self.root)
         ventana.grab_set()
-    
+
         self.root.wait_window(ventana)
-    
+
         return resultado[0]
 
 
@@ -337,32 +306,28 @@ class Juego:
 
 
     def dibujar(self):
-        self.canvas.delete("all") # Borrar todo en cada frame
+        self.canvas.delete("all")
         texto = "PUNTUACION\n" + str(self.puntuacion)
 
         if self.tipo_juego == 'TANKS':
-        
+
             texto += "\n\nHP\n" + str(self.player_hp)
 
         self.label_score.config(text=texto)
-        
-        # Colores
-        COLOR_GRID_FIJA = '#343434' # Gris oscuro para las celdas fijadas (Tetris)
-        COLOR_PIEZA = '#00FFFF'     # Cyan para la pieza activa (Tetris)
-        COLOR_SNAKE_CABEZA = '#00FF00' # Verde brillante
-        COLOR_SNAKE_CUERPO = '#33CC33' # Verde normal
-        COLOR_FOOD = '#FF0000'      # Rojo
-        
-        # 1. Dibujar la cuadricula estatica (grid base)
+
+        COLOR_GRID_FIJA = '#343434'
+        COLOR_PIEZA = '#00FFFF'
+        COLOR_SNAKE_CABEZA = '#00FF00'
+        COLOR_SNAKE_CUERPO = '#33CC33'
+        COLOR_FOOD = '#FF0000'
+
         for y in range(self.alto):
             for x in range(self.ancho):
                 val_celda = self.grid[y][x]
                 if val_celda != 0:
-                     # Si la celda contiene una cadena (color hexadecimal), usarla; si no, usar gris
                      color = val_celda if not isinstance(val_celda, int) else COLOR_GRID_FIJA
                      self.dibujar_celda(x, y, color)
 
-        # 2. Dibujar la pieza actual de Tetris
         if self.tipo_juego == 'TETRIS' and self.pieza_actual:
             color_pieza = '#00FFFF'
             if self.nombre_pieza_actual:
@@ -375,10 +340,8 @@ class Juego:
                 for x_offset, celda in enumerate(fila):
                     if celda == 1:
                         self.dibujar_celda(self.pieza_x + x_offset, self.pieza_y + y_offset, color_pieza)
-        
-        # 3. Dibujar Snake y Comida
+
         if self.tipo_juego == 'SNAKE':
-            # Comida
             if self.posicion_manzana:
 
                 x, y = self.posicion_manzana
@@ -396,7 +359,7 @@ class Juego:
             if self.posicion_powerup:
 
              x, y = self.posicion_powerup
-            
+
              self.dibujar_celda(
                  x,
                  y,
@@ -405,12 +368,12 @@ class Juego:
              )
 
             if "CLOUD" in self.obstacles:
-            
+
                 color = self.obstacles["CLOUD"]["color"]
                 forma = self.obstacles["CLOUD"]["form"]
 
             for x, y in self.posiciones_obstaculos:
-            
+
                 self.dibujar_celda(
                     x,
                     y,
@@ -426,7 +389,7 @@ class Juego:
                      "#9900FF",
                      "CIRCLE"
                  )
-            
+
             for x, y in self.posiciones_obstaculos:
 
                 self.dibujar_celda(
@@ -435,14 +398,13 @@ class Juego:
                     "#AAAAAA",
                     "CIRCLE"
                 )
-            
-            
+
 
             for i, segmento in enumerate(self.serpiente_cuerpo):
                 x, y = segmento
 
                 if i == 0:
-                
+
                     if self.inmune:
                         color = "#FF00D4"
                     else:
@@ -475,7 +437,7 @@ class Juego:
                         color = colores[i % len(colores)]
 
                     else:
-                    
+
                         color = COLOR_SNAKE_CUERPO
                     forma = self.shapes.get(
                         "SNAKE_BODY",
@@ -539,20 +501,20 @@ class Juego:
                     "#00FF00",
                     "CIRCLE"
                 )
-            
+
             if self.boss_activo:
 
                 if self.boss_hp > 100:
-                    color_boss = "#800080"   # purpura - fase 1
+                    color_boss = "#800080"
                 elif self.boss_hp > 50:
-                    color_boss = "#FF0000"   # rojo - fase 2
+                    color_boss = "#FF0000"
                 else:
-                    color_boss = "#FF8800"   # naranja - fase 3
+                    color_boss = "#FF8800"
 
                 for dy in range(5):
-                
+
                     for dx in range(5):
-                    
+
                         self.dibujar_celda(
                             self.boss_x + dx,
                             self.boss_y + dy,
@@ -618,7 +580,7 @@ class Juego:
         if nombre_evento in self.datos_juego['events']:
             for accion in self.datos_juego['events'][nombre_evento]:
                 verbo, objeto = accion.get('accion'), accion.get('objeto')
-                
+
                 if verbo == 'INCREASE_SCORE': self.puntuacion += int(objeto)
                 if verbo == 'GAME_OVER': self.juego_terminado = True
 
@@ -626,9 +588,9 @@ class Juego:
                     if verbo == 'SPAWN': self.tetris_spawn_pieza()
                     if verbo == 'MOVE': self.tetris_mover_pieza(accion['params'][0])
                     if verbo == 'ROTATE': self.tetris_rotar_pieza()
-                
+
                 if self.tipo_juego == 'SNAKE':
-                    
+
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.snake_spawn_jugador(accion)
                     if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_manzana()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
@@ -658,25 +620,18 @@ class Juego:
                             )
 
 
-    # METODOS DE LOGICA DE JUEGO (MANTENIDOS DEL ARCHIVO ORIGINAL)
-    # ---------------------------------------------------------------------
-
     def tetris_spawn_pieza(self):
-        # 1. Verificar si se cumplen las condiciones para spawnear el Power-Up
         if self.lineas_3_simultaneas and self.powerups:
-            # Seleccionar e instanciar el Power-Up (ej. GEM_POWERUP)
-            nombre_seleccionado = list(self.powerups.keys())[0]  # Obtener el primer powerup
+            nombre_seleccionado = list(self.powerups.keys())[0]
             self.nombre_pieza_actual = nombre_seleccionado
             self.pieza_actual = self.powerups[nombre_seleccionado]['states']
-            
-            # Resetear las condiciones especiales tras el spawn
+
             self.lineas_3_simultaneas = False
         else:
-            # 2. Seleccion ponderada (CHANCE) de pieza regular
             nombres = list(self.shapes.keys())
             pesos = [self.shapes[n]['chance'] for n in nombres]
             total_pesos = sum(pesos)
-            
+
             r = random.uniform(0, total_pesos)
             acumulado = 0
             nombre_seleccionado = nombres[-1]
@@ -685,10 +640,10 @@ class Juego:
                     nombre_seleccionado = nombre
                     break
                 acumulado += peso
-                
+
             self.nombre_pieza_actual = nombre_seleccionado
             self.pieza_actual = self.shapes[nombre_seleccionado]['states']
-            
+
         self.pieza_x, self.pieza_y, self.pieza_rotacion = self.ancho // 2 - 2, 0, 0
         if self.tetris_verificar_colision(self.pieza_x, self.pieza_y, self.pieza_rotacion):
             self.juego_terminado = True
@@ -730,27 +685,21 @@ class Juego:
 
     def tetris_verificar_colision(self, x, y, rotacion):
         if not self.pieza_actual: return False
-        
-        # Comportamiento especial de traspaso (phasing) para GEM_POWERUP
+
         if self.nombre_pieza_actual == 'GEM_POWERUP':
-            # Verificar límites laterales e inferior de la pantalla
             if not (0 <= x < self.ancho):
                 return True
             if not (0 <= y < self.alto):
                 return True
-            # Encontrar el hueco vacío más profundo de la columna x
             deepest_y = -1
             for y_check in range(self.alto - 1, -1, -1):
                 if self.grid[y_check][x] == 0:
                     deepest_y = y_check
                     break
-            # Si intenta descender por debajo del hueco más profundo, colisiona
             if y > deepest_y:
                 return True
-            # En cualquier otro caso, puede atravesar y traspasar bloques colocados
             return False
 
-        # Comportamiento normal para el resto de piezas
         matriz_pieza = self.pieza_actual[rotacion]
         for y_offset, fila in enumerate(matriz_pieza):
             for x_offset, celda in enumerate(fila):
@@ -768,12 +717,12 @@ class Juego:
                 self.lineas_3_simultaneas = True
             self.grid = [[0] * self.ancho for _ in range(lineas_limpias)] + nuevo_grid
             for _ in range(lineas_limpias): self.ejecutar_evento('ON_LINE_CLEAR')
-    
+
     def snake_spawn_jugador(self, accion):
         coords = accion['params'][0] if accion['params'] else [self.ancho // 2, self.alto // 2]
         self.serpiente_cuerpo = [(coords[0], coords[1])]
         self.serpiente_direccion = (1, 0)
-        
+
     def snake_spawn_manzana(self):
 
         while True:
@@ -785,7 +734,7 @@ class Juego:
 
                 self.posicion_manzana = (x,y)
                 break
-    
+
     def snake_spawn_powerup(self):
 
         while True:
@@ -821,11 +770,11 @@ class Juego:
 
                 self.posiciones_veneno.append((x,y))
                 break
-    
+
     def snake_comer_veneno(self):
 
         if self.inmune:
-        
+
             self.posiciones_veneno = [
                 p for p in self.posiciones_veneno
                 if p != self.serpiente_cuerpo[0]
@@ -876,7 +825,7 @@ class Juego:
             self.serpiente_cuerpo[0]
         ]
 
-    
+
     def snake_mover_jugador(self):
         if self.inmune and time.time() > self.tiempo_inmunidad:
 
@@ -890,25 +839,25 @@ class Juego:
         if not (0 <= nueva_cabeza[0] < self.ancho and 0 <= nueva_cabeza[1] < self.alto):
 
             if self.inmune:
-            
+
                 self.serpiente_cuerpo.pop()
                 return
 
             self.ejecutar_evento('ON_COLLISION_WALL')
             return
-            
+
         if nueva_cabeza in self.serpiente_cuerpo[:-1]:
 
              if self.inmune:
-                
+
                  self.serpiente_cuerpo.pop()
                  return
-            
+
              self.ejecutar_evento('ON_COLLISION_SELF')
              return
 
         self.serpiente_cuerpo.insert(0, nueva_cabeza)
-        
+
         if nueva_cabeza == self.posicion_manzana:
             self.contador_rondas += 1
             if self.obstaculos_habilitados:
@@ -932,7 +881,7 @@ class Juego:
                 if random.random() < 0.3:
 
                     self.snake_spawn_veneno()
-        
+
         elif nueva_cabeza in self.posiciones_obstaculos:
 
             self.snake_chocar_obstaculo()
@@ -946,7 +895,7 @@ class Juego:
             self.snake_comer_veneno()
 
             self.snake_spawn_veneno()
-        
+
         elif nueva_cabeza == self.posicion_powerup:
 
             self.snake_activar_inmunidad()
@@ -966,7 +915,6 @@ class Juego:
 
     def snake_crecer(self):
         pass
-
 
 
     def tanks_spawn_player(self):
@@ -1016,29 +964,29 @@ class Juego:
     def tanks_actualizar_balas(self):
 
         nuevas_balas = []
-    
+
         for bala in self.balas_jugador:
-        
+
             bala["x"] += bala["dx"]
-    
+
             bala["y"] += bala["dy"]
-    
+
             if (
                 bala["x"] >= 0 and
                 bala["x"] < self.ancho and
                 bala["y"] >= 0 and
                 bala["y"] < self.alto
             ):
-    
+
                 nuevas_balas.append(
                     bala
                 )
-    
+
         self.balas_jugador = nuevas_balas
         nuevas = []
 
         for bala in self.balas_enemigos:
-        
+
             bala["x"] += bala["dx"]
             bala["y"] += bala["dy"]
 
@@ -1098,7 +1046,7 @@ class Juego:
 
             if 0 <= nuevo_y < self.alto:
                 enemigo["y"] = nuevo_y
-    
+
     def tanks_actualizar_enemigos_rapidos(self):
 
         for enemigo in self.enemigos_rapidos:
@@ -1213,36 +1161,30 @@ class Juego:
 
         self.boss_timer += 1
 
-        # --- Fase 1: HP > 100, purpura, dispara en 4 direcciones cada 20 ticks ---
         if self.boss_hp > 700:
             cadencia = 20
             direcciones = [(1,0),(-1,0),(0,1),(0,-1)]
 
-        # --- Fase 2: HP 51-100, rojo, dispara en 8 direcciones cada 15 ticks + se mueve ---
         elif self.boss_hp > 200:
             cadencia = 15
             direcciones = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,1),(1,-1),(-1,-1)]
 
-            # Se mueve hacia el jugador lentamente cada 25 ticks
             if self.boss_timer % 25 == 0:
                 if self.player_x > self.boss_x + 2:
                     self.boss_x = min(self.boss_x + 1, self.ancho - 5)
                 elif self.player_x < self.boss_x + 2:
                     self.boss_x = max(self.boss_x - 1, 0)
 
-        # --- Fase 3: HP <= 50, naranja, dispara en 8 direcciones cada 8 ticks + se mueve rapido ---
         else:
             cadencia = 8
             direcciones = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,1),(1,-1),(-1,-1)]
 
-            # Se mueve mas rapido cada 15 ticks
             if self.boss_timer % 15 == 0:
                 if self.player_x > self.boss_x + 2:
                     self.boss_x = min(self.boss_x + 1, self.ancho - 5)
                 elif self.player_x < self.boss_x + 2:
                     self.boss_x = max(self.boss_x - 1, 0)
 
-        # Disparar rafaga desde el centro del boss
         if self.boss_timer % cadencia == 0:
             centro_x = self.boss_x + 2
             centro_y = self.boss_y + 2
@@ -1267,7 +1209,7 @@ class Juego:
                 0,
                 self.alto - 1
             )
-        
+
         )
 
     def tanks_verificar_colisiones(self):
@@ -1352,7 +1294,6 @@ class Juego:
 
         self.balas_jugador = balas_restantes
 
-        # Balas enemigas se consumen al impactar
         balas_enemigas_restantes = []
 
         for bala in self.balas_enemigos:
@@ -1371,7 +1312,6 @@ class Juego:
 
         self.balas_enemigos = balas_enemigas_restantes
 
-        # Contacto enemigo -> jugador: enemigo muere y hace daño
         for enemigo in list(self.enemigos):
 
             if (
@@ -1399,7 +1339,7 @@ class Juego:
                     self.juego_terminado = True
 
     def tanks_game_tick(self):
-        
+
         self.timer_enemigos += 1
 
         if self.timer_enemigos > 30 and not self.boss_activo:
@@ -1450,13 +1390,8 @@ class Juego:
 
         self.tanks_verificar_colisiones()
 
-    
-    
-    # METODOS DE SALIDA (ADAPTADOS A GUI)
-    # -----------------------------------
 
     def mostrar_game_over(self):
-        # Muestra una ventana de mensaje de Tkinter
         tkMessageBox.showinfo("Juego Terminado", "Puntuacion Final: " + str(self.puntuacion))
         self.root.destroy()
         sys.exit(0)
