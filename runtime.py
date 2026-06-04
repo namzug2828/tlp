@@ -508,7 +508,7 @@ class Juego:
                 self.dibujar_celda(
                     enemigo["x"],
                     enemigo["y"],
-                    "#FF8800"
+                    "#0088FF"
                 )
 
             for bala in self.balas_jugador:
@@ -525,7 +525,7 @@ class Juego:
                 self.dibujar_celda(
                     bala["x"],
                     bala["y"],
-                    "#FF00FF",
+                    "#00FF00",
                     "CIRCLE"
                 )
 
@@ -1066,24 +1066,19 @@ class Juego:
 
         for enemigo in self.enemigos:
 
-            # 70% del tiempo se mueven hacia el jugador
+            enemigo["_tick"] = enemigo.get("_tick", 0) + 1
+            if enemigo["_tick"] % 2 != 0:
+                continue
+
             if random.random() < 0.7:
-                dx = 0
-                dy = 0
-                if self.player_x > enemigo["x"]:
-                    dx = 1
-                elif self.player_x < enemigo["x"]:
-                    dx = -1
-                if self.player_y > enemigo["y"]:
-                    dy = 1
-                elif self.player_y < enemigo["y"]:
-                    dy = -1
-                # Moverse solo en un eje por tick para evitar diagonal perfecta
+                dx, dy = 0, 0
+                if self.player_x > enemigo["x"]: dx = 1
+                elif self.player_x < enemigo["x"]: dx = -1
+                if self.player_y > enemigo["y"]: dy = 1
+                elif self.player_y < enemigo["y"]: dy = -1
                 if dx != 0 and dy != 0:
-                    if random.random() < 0.5:
-                        dy = 0
-                    else:
-                        dx = 0
+                    if random.random() < 0.5: dy = 0
+                    else: dx = 0
             else:
                 dx = random.choice([-1, 0, 1])
                 dy = random.choice([-1, 0, 1])
@@ -1101,23 +1096,19 @@ class Juego:
 
         for enemigo in self.enemigos_rapidos:
 
-            # 90% del tiempo persiguen al jugador (más agresivos)
+            enemigo["_tick"] = enemigo.get("_tick", 0) + 1
+            if enemigo["_tick"] % 2 != 0:
+                continue
+
             if random.random() < 0.9:
-                dx = 0
-                dy = 0
-                if self.player_x > enemigo["x"]:
-                    dx = 1
-                elif self.player_x < enemigo["x"]:
-                    dx = -1
-                if self.player_y > enemigo["y"]:
-                    dy = 1
-                elif self.player_y < enemigo["y"]:
-                    dy = -1
+                dx, dy = 0, 0
+                if self.player_x > enemigo["x"]: dx = 1
+                elif self.player_x < enemigo["x"]: dx = -1
+                if self.player_y > enemigo["y"]: dy = 1
+                elif self.player_y < enemigo["y"]: dy = -1
                 if dx != 0 and dy != 0:
-                    if random.random() < 0.5:
-                        dy = 0
-                    else:
-                        dx = 0
+                    if random.random() < 0.5: dy = 0
+                    else: dx = 0
             else:
                 dx = random.choice([-1, 0, 1])
                 dy = random.choice([0, 1])
@@ -1154,18 +1145,11 @@ class Juego:
 
             if random.randint(1, 15) == 1:
 
-                # Calcular dirección hacia el jugador
-                dx = 0
-                dy = 0
-                if self.player_x > enemigo["x"]:
-                    dx = 1
-                elif self.player_x < enemigo["x"]:
-                    dx = -1
-                if self.player_y > enemigo["y"]:
-                    dy = 1
-                elif self.player_y < enemigo["y"]:
-                    dy = -1
-                # Disparar en un solo eje (el que tenga mayor distancia)
+                dx, dy = 0, 0
+                if self.player_x > enemigo["x"]: dx = 1
+                elif self.player_x < enemigo["x"]: dx = -1
+                if self.player_y > enemigo["y"]: dy = 1
+                elif self.player_y < enemigo["y"]: dy = -1
                 if abs(self.player_x - enemigo["x"]) >= abs(self.player_y - enemigo["y"]):
                     dy = 0
                 else:
@@ -1185,16 +1169,11 @@ class Juego:
 
             if random.randint(1, 10) == 1:
 
-                dx = 0
-                dy = 0
-                if self.player_x > enemigo["x"]:
-                    dx = 1
-                elif self.player_x < enemigo["x"]:
-                    dx = -1
-                if self.player_y > enemigo["y"]:
-                    dy = 1
-                elif self.player_y < enemigo["y"]:
-                    dy = -1
+                dx, dy = 0, 0
+                if self.player_x > enemigo["x"]: dx = 1
+                elif self.player_x < enemigo["x"]: dx = -1
+                if self.player_y > enemigo["y"]: dy = 1
+                elif self.player_y < enemigo["y"]: dy = -1
                 if abs(self.player_x - enemigo["x"]) >= abs(self.player_y - enemigo["y"]):
                     dy = 0
                 else:
@@ -1325,55 +1304,48 @@ class Juego:
                 bala["x"] == self.player_x and
                 bala["y"] == self.player_y
             ):
-
                 self.player_hp -= 25
 
                 if self.player_hp <= 0:
-                    self.player_hp = 0
                     self.juego_terminado = True
-                # bala se consume, no se agrega
 
             else:
                 balas_enemigas_restantes.append(bala)
 
         self.balas_enemigos = balas_enemigas_restantes
 
-        # Colisiones por contacto directo enemigo -> jugador
-        danio_contacto = False
-
-        for enemigo in self.enemigos:
+        # Colisiones por contacto: enemigo hace daño y muere
+        for enemigo in list(self.enemigos):
 
             if (
-                not danio_contacto and
                 enemigo["x"] == self.player_x and
                 enemigo["y"] == self.player_y
             ):
                 self.player_hp -= enemigo["damage"]
-                danio_contacto = True
+                self.enemigos.remove(enemigo)
+                self.puntuacion += 50
 
                 if self.player_hp <= 0:
-                    self.player_hp = 0
                     self.juego_terminado = True
 
-        for enemigo in self.enemigos_rapidos:
+        for enemigo in list(self.enemigos_rapidos):
 
             if (
-                not danio_contacto and
                 enemigo["x"] == self.player_x and
                 enemigo["y"] == self.player_y
             ):
                 self.player_hp -= enemigo["damage"]
-                danio_contacto = True
+                self.enemigos_rapidos.remove(enemigo)
+                self.puntuacion += 50
 
                 if self.player_hp <= 0:
-                    self.player_hp = 0
                     self.juego_terminado = True
 
     def tanks_game_tick(self):
         
         self.timer_enemigos += 1
 
-        if self.timer_enemigos > 30:
+        if self.timer_enemigos > 30 and not self.boss_activo:
 
             self.timer_enemigos = 0
 
@@ -1383,7 +1355,8 @@ class Juego:
             self.puntuacion >= 1000 and
             not self.boss_activo
         ):
-        
+            self.enemigos = []
+            self.enemigos_rapidos = []
             self.tanks_spawn_boss()
 
         if random.randint(1,300) == 1:
