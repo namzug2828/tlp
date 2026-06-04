@@ -1356,6 +1356,10 @@ class Juego:
             self.enemigos_rapidos = []
             self.tanks_spawn_boss()
 
+        if random.randint(1,60) == 1:
+
+            self.tanks_spawn_fast_enemy()
+
         if random.randint(1,300) == 1:
 
             self.tanks_spawn_hammer()
