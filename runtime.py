@@ -2,6 +2,7 @@ import sys
 import json
 import time
 import random
+import pygame
 try:
     import Tkinter as tk
     import tkMessageBox
@@ -21,6 +22,40 @@ class Juego:
         self.juego_terminado = False
 
         self.root = tk.Tk()
+
+        pygame.mixer.init()
+
+        
+        if self.tipo_juego == 'TETRIS':
+        
+            pygame.mixer.music.load("assets/SIN_SENTIMIENTO.mp3")
+            pygame.mixer.music.play(-1)
+
+        elif self.tipo_juego == 'SNAKE':
+        
+            pygame.mixer.music.load("assets/DRAGON_BALL.mp3")
+            pygame.mixer.music.play(-1)
+
+        elif self.tipo_juego == 'TANKS':
+        
+            pygame.mixer.music.load("assets/TE_ENTIENDO.mp3")
+            pygame.mixer.music.play(-1)
+
+        
+
+        # Efectos
+        self.sonido_disparo = pygame.mixer.Sound(
+            "assets/DISPARO.wav"
+        )
+
+        self.sonido_danio = pygame.mixer.Sound(
+            "assets/DANO.wav"
+        )
+
+        self.sonido_hammer = pygame.mixer.Sound(
+            "assets/HAMMER.wav"
+        )
+
         self.root.title("BrickScript - " + self.tipo_juego)
         self.root.protocol("WM_DELETE_WINDOW", self.cerrar_ventana)
 
@@ -172,6 +207,7 @@ class Juego:
         self.timer_id = self.root.after(50, self.game_loop)
 
     def cerrar_ventana(self):
+        pygame.mixer.music.stop()
         if self.timer_id:
             self.root.after_cancel(self.timer_id)
         self.root.destroy()
@@ -772,6 +808,7 @@ class Juego:
                 break
 
     def snake_comer_veneno(self):
+        self.sonido_danio.play()
 
         if self.inmune:
 
@@ -811,6 +848,7 @@ class Juego:
                 self.posiciones_obstaculos.append((x,y))
 
     def snake_chocar_obstaculo(self):
+        self.sonido_danio.play()
         if self.inmune:
             return
 
@@ -936,6 +974,8 @@ class Juego:
             self.player_y = nuevo_y
 
     def tanks_disparar(self):
+
+        self.sonido_disparo.play()
 
         dx = 0
         dy = 0
@@ -1304,6 +1344,9 @@ class Juego:
             ):
                 self.player_hp -= 25
 
+                self.sonido_danio.play()
+                
+
                 if self.player_hp <= 0:
                     self.juego_terminado = True
 
@@ -1319,6 +1362,9 @@ class Juego:
                 enemigo["y"] == self.player_y
             ):
                 self.player_hp -= enemigo["damage"]
+
+                self.sonido_danio.play()
+
                 self.enemigos.remove(enemigo)
                 self.puntuacion += 50
 
@@ -1332,6 +1378,9 @@ class Juego:
                 enemigo["y"] == self.player_y
             ):
                 self.player_hp -= enemigo["damage"]
+
+                self.sonido_danio.play()
+
                 self.enemigos_rapidos.remove(enemigo)
                 self.puntuacion += 50
 
@@ -1342,7 +1391,7 @@ class Juego:
 
         self.timer_enemigos += 1
 
-        if self.timer_enemigos > 30 and not self.boss_activo:
+        if self.timer_enemigos > 40:
 
             self.timer_enemigos = 0
 
@@ -1356,7 +1405,7 @@ class Juego:
             self.enemigos_rapidos = []
             self.tanks_spawn_boss()
 
-        if not self.boss_activo and random.randint(1,120) == 1:
+        if random.randint(1,100) == 1:
 
             self.tanks_spawn_fast_enemy()
 
@@ -1373,7 +1422,9 @@ class Juego:
                 self.player_y == y
             ):
 
-                self.player_hp += 25
+                self.player_hp += 50
+
+                self.sonido_hammer.play()
 
                 self.posicion_hammer = None
 
