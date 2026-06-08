@@ -139,7 +139,7 @@
   "boss": {
     "name": "FINAL_FORTRESS",
     "color": "#800080",
-    "hp": 200,
+    "hp": 1500,
     "damage": 100,
     "states": [
       [
