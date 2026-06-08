@@ -91,21 +91,23 @@ tanks.brick, y su implementación se maneja de la siguiente manera:
 --------------------------------------------------------------------------------
 4. DESGLOSE DE APORTES POR INTEGRANTE
 --------------------------------------------------------------------------------
-- USER:
-  * Diseño conceptual de la gramática BNF para soportar múltiples tanques,
-    jefe final y proyectiles.
-  * Definición de las reglas sintácticas del archivo gramática tanks.bnf.
-  * Pruebas del compilador y validación de la retrocompatibilidad con Snake
-    y Tetris.
-  * Validación final de la jugabilidad del combate de tanques y la derrota
-    del Final Boss.
+- Magdiel Santiago Gil Castillo:
+  * Diseño conceptual de la gramática BNF para soportar múltiples tanques, proyectiles y la fortaleza (Final Boss) en tanks.bnf.
+  * Pruebas sintácticas y validación de las reglas gramaticales en compiler.py.
 
-- Antigravity (AI Pair Programmer):
-  * Implementación y pruebas de validación del analizador sintáctico (Parser)
-    para el bloque BOSS y atributos del compilador (compiler.py).
-  * Refactorización y optimización completa del motor de ejecución (runtime.py)
-    para soportar dibujo matricial de entidades multicelda (2x2 tanques, 5x5 boss).
-  * Desarrollo del sistema de colisión precisa por máscara de bits para balas
-    del jugador, enemigos, muros destructibles y el Final Boss.
-  * Redacción del presente informe técnico y empaquetado final de entregables.
+- Sebastian Andrey Alvarez Tamayo:
+  * Extensión y unificación de las especificaciones BNF para dar soporte a parámetros avanzados de niveles, velocidades decimales y opcionalidad de dos puntos en snake.bnf y tetris.bnf.
+  * Pruebas de retrocompatibilidad y compilación cruzada de todos los scripts de juego (.brick).
+
+- Luis Mario Cardona Ramirez:
+  * Diseño del motor de ejecución en runtime.py para la representación de entidades multicelda (tanque jugador de 2x2, enemigos de 2x2 y el Final Boss de 5x5).
+  * Implementación de la renderización matricial y dibujo dinámico de formas según sus estados de rotación.
+
+- Andrés Felipe Muñoz Ortiz:
+  * Desarrollo del sistema de colisión precisa basada en máscaras de bits (bitmask collision) para proyectiles contra muros destructibles y contra celdas sólidas de la fortaleza Boss.
+  * Manejo de la lógica de vidas (HP) progresiva y las fases de comportamiento e IA del Final Boss en runtime.py.
+
+- Andrés Santiago Muñoz Villamizar:
+  * Implementación de controles interactivos y mapeo del sistema de eventos en runtime.py (ON KEY_*, ON START, ON TARGET_SCORE, ON BOSS_DEFEATED).
+  * Redacción del manual técnico (MANUAL.txt), manual de usuario final (README.txt) y estructuración final del paquete de entrega del proyecto.
 ================================================================================
