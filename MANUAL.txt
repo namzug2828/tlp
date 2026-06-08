@@ -1,0 +1,100 @@
+================================================================================
+              MANUAL DE USUARIO TÉCNICO - ECOSISTEMA BRICKSCRIPT
+================================================================================
+
+Este manual describe el funcionamiento técnico de BrickScript y cómo extender el
+ecosistema agregando nuevos juegos y utilizando etiquetas avanzadas.
+
+--------------------------------------------------------------------------------
+1. CÓMO AGREGAR UN NUEVO JUEGO AL ECOSISTEMA
+--------------------------------------------------------------------------------
+Para integrar un nuevo juego (ej. "Space Invaders" o "Pacman") en BrickScript, 
+se debe seguir un flujo de 4 pasos:
+
+Paso 1: Especificación de la Gramática (.bnf)
+- Crea un archivo de gramática en la carpeta `gramaticas bnf/nuevo_juego.bnf`.
+- Define las reglas sintácticas del nuevo juego, alineadas con la estructura
+  general de BrickScript:
+    <programa> ::= <tipo_juego> <grid> <definiciones> <eventos>
+    <tipo_juego> ::= "GAME_TYPE" "NUEVO_JUEGO"
+
+Paso 2: Creación del Script del Juego (.brick)
+- Crea el archivo del juego en la carpeta `games/nuevo_juego.brick`.
+- Utiliza la sintaxis definida en su BNF correspondiente.
+
+Paso 3: Soporte en el Compilador (compiler.py)
+- El compilador universal es altamente genérico. Reconoce y traduce bloques de:
+  * GAME_TYPE y GAME_GRID.
+  * DEFINE [SHAPE|FOOD|OBSTACLE|POWERUP] con sus atributos opcionales.
+  * LEVELS (con velocidades y duraciones).
+  * BOSS (con matrices personalizadas y vidas).
+  * ON <evento> con listas de acciones y parámetros.
+- Si el nuevo juego requiere un comando o atributo no soportado, agrega el
+  token al método `lexer` y un método de análisis correspondiente en `Parser`.
+
+Paso 4: Implementación en el Motor de Ejecución (runtime.py)
+- Extiende la clase `Juego` en `runtime.py`:
+  1. Inicialización (`__init__`): Agrega un bloque condicional para el nuevo 
+     GAME_TYPE e inicializa sus variables de estado:
+       if self.tipo_juego == 'NUEVO_JUEGO':
+           self.score = 0
+           ...
+  2. Bucle de Juego (`game_loop`): Agrega el tick correspondiente:
+       if self.tipo_juego == 'NUEVO_JUEGO':
+           self.nuevo_juego_tick()
+  3. Controles (`manejar_input_gui`): Vincula las teclas del teclado a los eventos:
+       if self.tipo_juego == 'NUEVO_JUEGO':
+           if key == 'UP': self.ejecutar_evento('ON_KEY_UP')
+  4. Dibujo (`dibujar`): Implementa el renderizado de la grilla y las entidades:
+       if self.tipo_juego == 'NUEVO_JUEGO':
+           self.dibujar_entidades()
+  5. Acciones (`ejecutar_evento`): Maneja las acciones del lenguaje:
+       if self.tipo_juego == 'NUEVO_JUEGO':
+           if verbo == 'SPAWN': ...
+
+--------------------------------------------------------------------------------
+2. GUÍA DE ETIQUETAS AVANZADAS
+--------------------------------------------------------------------------------
+BrickScript soporta varios atributos avanzados dentro del bloque `DEFINE` y el 
+bloque `BOSS` para enriquecer la jugabilidad:
+
+- COLOR (e.g., `COLOR: #FF0000` o `COLOR #FF0000`)
+  * Define el color hexadecimal que el motor usará para renderizar la pieza.
+  * Soporta formatos de 3 y 6 dígitos (ej. #F00 o #FF0000).
+
+- CHANCE (e.g., `CHANCE: 10`)
+  * Determina la probabilidad relativa de aparición de una pieza o powerup.
+  * Se utiliza en Tetris para generar piezas ponderadas mediante una ruleta.
+
+- EFFECT (e.g., `EFFECT: GROW`)
+  * Asocia un efecto especial a un objeto (ej. comida).
+  * En Snake, `EFFECT: GROW` le indica al motor que incremente la longitud.
+
+- DURATION (e.g., `DURATION: 5` o `POWERUP_DURATION 5`)
+  * Especifica la duración en segundos del efecto de inmunidad o beneficio.
+
+- TYPE (e.g., `TYPE: PLAYER`, `TYPE: ENEMY`, `TYPE: PROJECTILE`, `TYPE: WALL`)
+  * Etiqueta semántica de distinción de entidad:
+    * `PLAYER`: El tanque del jugador.
+    * `ENEMY`: Tanques oponentes de comportamiento autónomo.
+    * `PROJECTILE`: Proyectiles de combate.
+    * `WALL`: Muros destructibles del mapa.
+
+- HP (e.g., `HP: 100`)
+  * Determina los puntos de vida o resistencia de una entidad (jugador,
+    enemigo o el Final Boss).
+
+- DAMAGE (e.g., `DAMAGE: 50`)
+  * Determina el daño restado al HP del jugador al colisionar o ser impactado.
+
+- SPEED (e.g., `SPEED: 150`, `SPEED 0.15` o `SPEED 2`)
+  * En los niveles (`LEVELS`), determina la velocidad de actualización:
+    * Si es > 1, se interpreta en milisegundos (ej. 150 ms).
+    * Si es <= 1, se interpreta directamente en segundos (ej. 0.15 s).
+  * En formas (`SHAPE`), determina el factor de movimiento (ej. SPEED: 2
+    indica que el enemigo rápido se actualiza el doble de rápido).
+
+- STATE <n> (e.g., `STATE 1: [0,1,0]...`)
+  * Describe la matriz geométrica de la entidad. Cada fila está entre corchetes
+    `[...]`. El motor dibuja las celdas con valor 1 usando el color del objeto.
+================================================================================

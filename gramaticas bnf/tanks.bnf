@@ -1,0 +1,48 @@
+<programa> ::= <tipo_juego> <grid> <definiciones> <boss_def> <eventos>
+
+<tipo_juego> ::= "GAME_TYPE" "TANKS"
+<grid>       ::= "GAME_GRID" "(" <numero> "," <numero> ")"
+<definiciones> ::= <definicion> | <definicion> <definiciones>
+<definicion> ::= <definicion_shape> | <definicion_powerup>
+
+<definicion_shape> ::= "DEFINE" "SHAPE" <identificador> ":" <atributos_shape> <estados> "END"
+<atributos_shape> ::= <atributo_shape> | <atributo_shape> <atributos_shape>
+<atributo_shape> ::= "COLOR" ":" <color_val> | "TYPE" ":" <type_val> | "HP" ":" <numero> | "DAMAGE" ":" <numero> | "SPEED" ":" <numero>
+
+<color_val> ::= <hex_color>
+<type_val>  ::= "PLAYER" | "ENEMY" | "PROJECTILE" | "WALL"
+
+<definicion_powerup> ::= "DEFINE" "POWERUP" <identificador> ":" <atributos_powerup> <estados> "END"
+<atributos_powerup> ::= "COLOR" ":" <color_val>
+
+<estados>          ::= <estado> | <estado> <estados>
+<estado>           ::= "STATE" <numero> ":" <matriz>
+<matriz>           ::= <fila> | <fila> <matriz>
+<fila>             ::= "[" <valores_fila> "]"
+<valores_fila>     ::= <numero> | <numero> "," <valores_fila>
+
+<boss_def> ::= "BOSS" <identificador> <atributos_boss> <estados> "END"
+<atributos_boss> ::= <atributo_boss> | <atributo_boss> <atributos_boss>
+<atributo_boss> ::= "COLOR" ":" <color_val> | "HP" ":" <numero> | "DAMAGE" ":" <numero>
+
+<eventos>    ::= <evento> | <evento> <eventos>
+<evento>     ::= "ON" <nombre_evento_tanks> ":" <acciones_tanks> "END"
+
+<nombre_evento_tanks> ::= "START" | "TICK" | "KEY_LEFT" | "KEY_RIGHT" | "KEY_UP" | "KEY_DOWN" | "KEY_SPACE" | "ENEMY_DESTROYED" | "TIMER" | "TARGET_SCORE" | "BOSS_DEFEATED"
+
+<acciones_tanks> ::= <accion_tanks> | <accion_tanks> <acciones_tanks>
+<accion_tanks>   ::= <accion_spawn> | <accion_move> | <accion_score> | <accion_gameover>
+
+<accion_spawn> ::= "SPAWN" <identificador> | "SPAWN" <identificador> "AT" <coordenadas>
+<accion_move>  ::= "MOVE" "PLAYER" <direccion> | "MOVE" "BULLET" "FORWARD"
+<accion_score> ::= "INCREASE_SCORE" <numero>
+<accion_gameover> ::= "GAME_OVER"
+
+<coordenadas>   ::= "(" <numero> "," <numero> ")"
+<direccion>     ::= "LEFT" | "RIGHT" | "UP" | "DOWN"
+<identificador> ::= <letra> | <letra> <identificador>
+<numero>        ::= <digito> | <digito> <numero>
+<letra>         ::= "A"..."Z" | "_"
+<digito>        ::= "0"..."9"
+<hex_color>     ::= "#" <hex_digit> <hex_digit> <hex_digit> <hex_digit> <hex_digit> <hex_digit> | "#" <hex_digit> <hex_digit> <hex_digit>
+<hex_digit>     ::= "0"..."9" | "A"..."F" | "a"..."f"

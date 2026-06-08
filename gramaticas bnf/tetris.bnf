@@ -2,15 +2,23 @@
 
 <tipo_juego> ::= "GAME_TYPE" "TETRIS"
 <grid>       ::= "GAME_GRID" "(" <numero> "," <numero> ")"
-<definiciones> ::= <definicion_shape> | <definicion_shape> <definiciones>
+<definiciones> ::= <definicion_shape> | <definicion_powerup> | <definicion_shape> <definiciones> | <definicion_powerup> <definiciones>
 <eventos>    ::= <evento> | <evento> <eventos>
 
-<definicion_shape> ::= "DEFINE" "SHAPE" <identificador> ":" <estados> "END"
+<definicion_shape> ::= "DEFINE" "SHAPE" <identificador> ":" <atributos_opcionales> <estados> "END"
+<atributos_opcionales> ::= <atributo_color> <atributo_chance> | <atributo_chance> <atributo_color> | <atributo_color> | <atributo_chance> | ""
+<atributo_color> ::= "COLOR" ":" <hex_color>
+<atributo_chance> ::= "CHANCE" ":" <numero>
+<hex_color> ::= "#" <hex_digito> <hex_digito> <hex_digito> <hex_digito> <hex_digito> <hex_digito>
+<hex_digito> ::= <digito> | "A"..."F" | "a"..."f"
 <estados>          ::= <estado> | <estado> <estados>
 <estado>           ::= "STATE" <numero> ":" <matriz>
 <matriz>           ::= <fila> | <fila> <matriz>
 <fila>             ::= "[" <valores_fila> "]"
 <valores_fila>     ::= <numero> | <numero> "," <valores_fila>
+
+<definicion_powerup> ::= "DEFINE" "POWERUP" <identificador> ":" <atributos_opcionales_pu> <estados> "END"
+<atributos_opcionales_pu> ::= <atributo_color> <atributo_chance> | <atributo_chance> <atributo_color> | <atributo_color> | <atributo_chance> | ""
 
 <evento>         ::= "ON" <nombre_evento_tetris> ":" <acciones_tetris> "END"
 <nombre_evento_tetris> ::= "START" | "TICK" | "LINE_CLEAR" | "KEY_UP" | "KEY_DOWN" | "KEY_LEFT" | "KEY_RIGHT"

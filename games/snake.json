@@ -1,207 +1,158 @@
 {
-  "shapes": {
-    "SNAKE_HEAD": {
-      "states": [
-        [
-          [
-            1
-          ]
-        ]
-      ], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "CIRCLE", 
-      "color": "#00FFFF", 
-      "speed": null, 
-      "hp": null, 
-      "type": null, 
-      "damage": null, 
-      "effect": null
-    }, 
-    "SNAKE_BODY": {
-      "states": [
-        [
-          [
-            1
-          ]
-        ]
-      ], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "TRIANGLE", 
-      "color": "#00FFFF", 
-      "speed": null, 
-      "hp": null, 
-      "type": null, 
-      "damage": null, 
-      "effect": null
-    }
-  }, 
-  "foods": {
-    "APPLE": {
-      "states": [], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "CIRCLE", 
-      "color": "#FF0000", 
-      "speed": null, 
-      "hp": null, 
-      "type": null, 
-      "damage": null, 
-      "effect": "GROW"
-    }, 
-    "POISON_FRUIT": {
-      "states": [], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "CIRCLE", 
-      "color": "#9900FF", 
-      "speed": null, 
-      "hp": null, 
-      "type": null, 
-      "damage": null, 
-      "effect": null
-    }
-  }, 
-  "tipo_juego": "SNAKE", 
-  "powerups": {
-    "IMMORTAL_FRUIT": {
-      "states": [], 
-      "duration": 5, 
-      "chance": 10, 
-      "form": "CIRCLE", 
-      "color": "#FFFF00", 
-      "speed": null, 
-      "hp": null, 
-      "type": null, 
-      "damage": null, 
-      "effect": null
-    }
-  }, 
-  "obstacles": {
-    "CLOUD": {
-      "states": [], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "CLOUD", 
-      "color": "#CCCCCC", 
-      "speed": null, 
-      "hp": null, 
-      "type": null, 
-      "damage": null, 
-      "effect": null
-    }
-  }, 
+  "tipo_juego": "SNAKE",
   "config": {
     "grid_size": [
-      18, 
+      18,
       18
     ]
-  }, 
+  },
+  "shapes": {
+    "SNAKE_BODY": {
+      "form": "TRIANGLE",
+      "color": "#00FFFF",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "SNAKE_HEAD": {
+      "form": "CIRCLE",
+      "color": "#00FFFF",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    }
+  },
+  "foods": {
+    "APPLE": {
+      "form": "CIRCLE",
+      "color": "#FF0000",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [],
+      "effect": "GROW",
+      "duration": null
+    }
+  },
+  "obstacles": {},
+  "powerups": {},
+  "levels": {},
+  "boss": {},
   "events": {
-    "ON_KEY_DOWN": [
-      {
-        "params": [], 
-        "accion": "SET_DIRECTION", 
-        "objeto": "DOWN"
-      }
-    ], 
-    "ON_EAT_FOOD": [
-      {
-        "params": [], 
-        "accion": "INCREASE_SCORE", 
-        "objeto": "10"
-      }, 
-      {
-        "params": [
-          "1"
-        ], 
-        "accion": "GROW", 
-        "objeto": "PLAYER"
-      }, 
-      {
-        "params": [
-          "RANDOM"
-        ], 
-        "accion": "SPAWN", 
-        "objeto": "FOOD"
-      }
-    ], 
-    "ON_KEY_RIGHT": [
-      {
-        "params": [], 
-        "accion": "SET_DIRECTION", 
-        "objeto": "RIGHT"
-      }
-    ], 
-    "ON_TICK": [
-      {
-        "params": [
-          "FORWARD"
-        ], 
-        "accion": "MOVE", 
-        "objeto": "PLAYER"
-      }
-    ], 
-    "ON_COLLISION_WALL": [
-      {
-        "params": [], 
-        "accion": "GAME_OVER", 
-        "objeto": null
-      }
-    ], 
-    "ON_COLLISION_SELF": [
-      {
-        "params": [], 
-        "accion": "GAME_OVER", 
-        "objeto": null
-      }
-    ], 
     "ON_START": [
       {
+        "accion": "SPAWN",
+        "objeto": "PLAYER",
         "params": [
           [
-            9, 
+            9,
             9
           ]
-        ], 
-        "accion": "SPAWN", 
-        "objeto": "PLAYER"
-      }, 
+        ]
+      },
       {
+        "accion": "SPAWN",
+        "objeto": "FOOD",
         "params": [
           "RANDOM"
-        ], 
-        "accion": "SPAWN", 
-        "objeto": "FOOD"
+        ]
       }
-    ], 
+    ],
+    "ON_TICK": [
+      {
+        "accion": "MOVE",
+        "objeto": "PLAYER",
+        "params": [
+          "FORWARD"
+        ]
+      }
+    ],
+    "ON_EAT_FOOD": [
+      {
+        "accion": "INCREASE_SCORE",
+        "objeto": "10",
+        "params": []
+      },
+      {
+        "accion": "GROW",
+        "objeto": "PLAYER",
+        "params": [
+          "1"
+        ]
+      },
+      {
+        "accion": "SPAWN",
+        "objeto": "FOOD",
+        "params": [
+          "RANDOM"
+        ]
+      }
+    ],
+    "ON_COLLISION_WALL": [
+      {
+        "accion": "GAME_OVER",
+        "objeto": null,
+        "params": []
+      }
+    ],
+    "ON_COLLISION_SELF": [
+      {
+        "accion": "GAME_OVER",
+        "objeto": null,
+        "params": []
+      }
+    ],
     "ON_KEY_UP": [
       {
-        "params": [], 
-        "accion": "SET_DIRECTION", 
-        "objeto": "UP"
+        "accion": "SET_DIRECTION",
+        "objeto": "UP",
+        "params": []
       }
-    ], 
+    ],
+    "ON_KEY_DOWN": [
+      {
+        "accion": "SET_DIRECTION",
+        "objeto": "DOWN",
+        "params": []
+      }
+    ],
     "ON_KEY_LEFT": [
       {
-        "params": [], 
-        "accion": "SET_DIRECTION", 
-        "objeto": "LEFT"
+        "accion": "SET_DIRECTION",
+        "objeto": "LEFT",
+        "params": []
+      }
+    ],
+    "ON_KEY_RIGHT": [
+      {
+        "accion": "SET_DIRECTION",
+        "objeto": "RIGHT",
+        "params": []
       }
     ]
-  }, 
-  "levels": {
-    "BABY": {
-      "speed": 150
-    }, 
-    "ENTHUSIAST": {
-      "powerup_duration": 5, 
-      "speed": 120
-    }, 
-    "NYAN_CAT": {
-      "speed": 60
-    }
-  }, 
-  "boss": {}
+  }
 }

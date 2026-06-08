@@ -1,0 +1,761 @@
+{
+  "tipo_juego": "TETRIS",
+  "config": {
+    "grid_size": [
+      10,
+      20
+    ]
+  },
+  "shapes": {
+    "I_PIECE": {
+      "form": "RECTANGLE",
+      "color": "#00FFFF",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "L_PIECE": {
+      "form": "RECTANGLE",
+      "color": "#FF9F00",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "T_PIECE": {
+      "form": "RECTANGLE",
+      "color": "#A000F0",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "O_PIECE": {
+      "form": "RECTANGLE",
+      "color": "#FFFF00",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "Z_PIECE": {
+      "form": "RECTANGLE",
+      "color": "#FF0000",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "S_PIECE": {
+      "form": "RECTANGLE",
+      "color": "#00FF00",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "P_PIECE": {
+      "form": "RECTANGLE",
+      "color": "#FF3399",
+      "chance": 8,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "V_PIECE": {
+      "form": "RECTANGLE",
+      "color": "#33FFCC",
+      "chance": 8,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    }
+  },
+  "foods": {},
+  "obstacles": {},
+  "powerups": {
+    "GEM_POWERUP": {
+      "form": "RECTANGLE",
+      "color": "#FFD700",
+      "chance": 0,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    }
+  },
+  "levels": {},
+  "boss": {},
+  "events": {
+    "ON_START": [
+      {
+        "accion": "SPAWN",
+        "objeto": "RANDOM_SHAPE",
+        "params": []
+      }
+    ],
+    "ON_TICK": [
+      {
+        "accion": "MOVE",
+        "objeto": "CURRENT_PIECE",
+        "params": [
+          "DOWN"
+        ]
+      }
+    ],
+    "ON_LINE_CLEAR": [
+      {
+        "accion": "INCREASE_SCORE",
+        "objeto": "100",
+        "params": []
+      }
+    ],
+    "ON_KEY_LEFT": [
+      {
+        "accion": "MOVE",
+        "objeto": "CURRENT_PIECE",
+        "params": [
+          "LEFT"
+        ]
+      }
+    ],
+    "ON_KEY_RIGHT": [
+      {
+        "accion": "MOVE",
+        "objeto": "CURRENT_PIECE",
+        "params": [
+          "RIGHT"
+        ]
+      }
+    ],
+    "ON_KEY_DOWN": [
+      {
+        "accion": "MOVE",
+        "objeto": "CURRENT_PIECE",
+        "params": [
+          "DOWN"
+        ]
+      }
+    ],
+    "ON_KEY_UP": [
+      {
+        "accion": "ROTATE",
+        "objeto": "CURRENT_PIECE",
+        "params": []
+      }
+    ]
+  }
+}

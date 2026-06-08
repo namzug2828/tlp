@@ -9,7 +9,7 @@ import json
 def lexer(codigo_fuente):
     # Eliminar comentarios pero mantener codigos de color hexadecimales
     codigo_fuente = re.sub(r'#(?![0-9A-Fa-f]{6}\b|[0-9A-Fa-f]{3}\b).*', '', codigo_fuente)
-    token_regex = r'#[0-9A-Fa-f]{6}\b|#[0-9A-Fa-f]{3}\b|\b[A-Z_]+\b|\d+|[\[\](),:]'
+    token_regex = r'#[0-9A-Fa-f]{6}\b|#[0-9A-Fa-f]{3}\b|\b[A-Z_]+\b|\d+\.\d+|\d+|[\[\](),:]'
     tokens = re.findall(token_regex, codigo_fuente)
     return tokens
 
@@ -78,7 +78,8 @@ class Parser:
         self.consumir('DEFINE')
         tipo = self.consumir()  # Puede ser 'SHAPE' o 'POWERUP'
         nombre = self.consumir()
-        self.consumir(':')
+        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+            self.consumir(':')
         forma = 'RECTANGLE'
 
         if self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'FORM':
@@ -106,7 +107,8 @@ class Parser:
                                                                                     'SPEED'
                                                                                   ]:
             attr = self.consumir()
-            self.consumir(':')
+            if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+                self.consumir(':')
             val = self.consumir()
             if attr == 'COLOR':
                 color = val
@@ -130,13 +132,17 @@ class Parser:
                  damage = int(val)
 
             elif attr == 'SPEED':
-                 speed = int(val)
+                 if '.' in val:
+                     speed = float(val)
+                 else:
+                     speed = int(val)
                 
         estados = []
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'STATE':
             self.consumir('STATE')
             self.consumir()
-            self.consumir(':')
+            if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+                self.consumir(':')
             matriz = []
             while self.posicion < len(self.tokens) and self.tokens[self.posicion] == '[':
                 fila = []
@@ -181,29 +187,32 @@ class Parser:
 
         elif tipo == 'POWERUP':
             self.ast['powerups'][nombre] = datos
-    def parsear_levels(self):
 
+    def parsear_levels(self):
         self.consumir('LEVELS')
-        self.consumir(':')
+        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+            self.consumir(':')
     
         while self.tokens[self.posicion] != 'END':
-        
             nivel = self.consumir()
-    
-            self.consumir(':')
+            if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+                self.consumir(':')
     
             datos_nivel = {}
     
             while self.tokens[self.posicion] != 'END':
             
                 atributo = self.consumir()
-    
-                self.consumir(':')
+                if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+                    self.consumir(':')
     
                 valor = self.consumir()
     
                 if atributo == 'SPEED':
-                    datos_nivel["speed"] = int(valor)
+                    if '.' in valor:
+                        datos_nivel["speed"] = float(valor)
+                    else:
+                        datos_nivel["speed"] = int(valor)
     
                 elif atributo == 'POWERUP_DURATION':
                     datos_nivel["powerup_duration"] = int(valor)
@@ -215,12 +224,12 @@ class Parser:
         self.consumir('END')
     
 
-
     # --- FUNCION CORREGIDA ---
     def parsear_evento(self):
         self.consumir('ON')
         nombre_evento = 'ON_' + self.consumir()
-        self.consumir(':')
+        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+            self.consumir(':')
         acciones = []
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] != 'END':
             verbo = self.consumir()
@@ -253,11 +262,8 @@ class Parser:
         self.ast['events'][nombre_evento] = acciones
 
     def parsear_boss(self):
-
         self.consumir('BOSS')
-
         nombre = self.consumir()
-
         color = "#FF00FF"
         hp = 100
         damage = 50
@@ -267,19 +273,14 @@ class Parser:
             'HP',
             'DAMAGE'
         ]:
-
             atributo = self.consumir()
-
-            self.consumir(':')
-
+            if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+                self.consumir(':')
             valor = self.consumir()
-
             if atributo == 'COLOR':
                 color = valor
-
             elif atributo == 'HP':
                 hp = int(valor)
-
             elif atributo == 'DAMAGE':
                 damage = int(valor)
 
@@ -291,7 +292,8 @@ class Parser:
 
             self.consumir()
 
-            self.consumir(':')
+            if self.posicion < len(self.tokens) and self.tokens[self.posicion] == ':':
+                self.consumir(':')
 
             matriz = []
 

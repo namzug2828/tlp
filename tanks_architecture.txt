@@ -1,0 +1,111 @@
+================================================================================
+           DOCUMENTO DE DISEÑO - ARQUITECTURA DE "BRICK TANKS"
+================================================================================
+
+Este documento detalla el diseño, la gramática y los componentes técnicos del 
+juego "Brick Tanks", implementado en BrickScript bajo el paradigma de desarrollo
+del compilador y motor de ejecución (runtime.py).
+
+--------------------------------------------------------------------------------
+1. DISTINCIÓN SEMÁNTICA: TANQUE JUGADOR VS. TANQUES ENEMIGOS EN EL CÓDIGO
+--------------------------------------------------------------------------------
+En el diseño gramatical (tanks.bnf) y el compilador (compiler.py), la distinción
+entre el jugador y los enemigos se define de manera explícita y semántica en la 
+estructura de los bloques de declaración (DEFINE SHAPE):
+
+- Tanque Jugador:
+  Se declara con la etiqueta TYPE: PLAYER. El compilador almacena este atributo,
+  y en el motor de ejecución (runtime.py), al cargarse el juego, se realiza una
+  búsqueda en el diccionario de formas para identificar la entidad del jugador:
+    self.player_hp = shape.get('hp', 200)
+    self.player_color = shape.get('color', '#0000FF')
+    self.player_w = len(shape['states'][0][0])
+    self.player_h = len(shape['states'][0])
+  El jugador tiene atributos únicos de HP, dirección ("UP", "DOWN", "LEFT",
+  "RIGHT"), y la capacidad de responder a eventos de teclado interactivos. Su
+  posición inicial en la grilla se define mediante las coordenadas de SPAWN 
+  en el bloque de eventos ON START.
+
+- Tanques Enemigos:
+  Se declaran con la etiqueta TYPE: ENEMY. Se soporta la definición de múltiples
+  tipos de enemigos (ej. ENEMY_TANK con velocidad estándar y FAST_ENEMY con
+  velocidad aumentada y HP diferenciado). El runtime carga todos los enemigos 
+  en una lista unificada de manera dinámica y genérica:
+    self.enemigos = []
+  Cada vez que un enemigo es generado, se le asigna su velocidad, vida y daño
+  específico según su definición en el archivo .brick:
+    speed = shape_info.get("speed", 1)
+    hp = shape_info.get("hp", 50)
+  La velocidad (SPEED) determina la frecuencia de actualización de su movimiento.
+  Los enemigos disparan balas en dirección al jugador con una probabilidad
+  basada en su velocidad y causan daño al impactar o chocar directamente (ramming).
+
+--------------------------------------------------------------------------------
+2. LÓGICA DE VIDA Y ATAQUES DEL FINAL BOSS (FORTALEZA O SÚPER TANQUE)
+--------------------------------------------------------------------------------
+El Final Boss se define mediante la sección BOSS de la gramática y el archivo 
+tanks.brick, y su implementación se maneja de la siguiente manera:
+
+- Definición e Inicialización:
+  Se le asignan atributos especiales de HP y daño masivo (ej. HP: 200, DAMAGE: 100)
+  y un diseño matricial de gran escala (5x5). Al iniciar la batalla, se eliminan
+  los enemigos pequeños y se inicializa la fortaleza:
+    self.boss_hp = boss_info.get('hp', 200)
+    self.boss_max_hp = self.boss_hp
+    self.boss_color = boss_info.get('color', '#800080')
+    self.boss_x = (self.ancho - boss_w) // 2
+    self.boss_y = 1
+
+- Lógica de Vida (HP):
+  A diferencia de los tanques comunes, el Boss soporta múltiples impactos. Cada
+  bala disparada por el jugador que colisiona con una celda activa de la matriz
+  del Boss reduce su HP en 50 puntos:
+    self.boss_hp -= 50
+  La salud del jefe está vinculada a su patrón de comportamiento:
+    * HP > 50%: Dispara en 4 direcciones cardinales cada 20 ticks.
+    * 20% < HP <= 50%: Dispara en 8 direcciones cada 15 ticks y se mueve
+      horizontalmente para alinearse con el jugador.
+    * HP <= 20%: Dispara en 8 direcciones cada 8 ticks y se mueve rápidamente.
+
+- Colisión Fina (Matricial):
+  La detección de colisiones de proyectiles con el Boss verifica de manera 
+  precisa si la bala cae dentro del área delimitada por su forma matricial y si
+  corresponde a una celda rellena (valor 1 en el estado actual), permitiendo
+  que las balas pasen a través de los espacios huecos del Boss sin dañarlo.
+
+--------------------------------------------------------------------------------
+3. REGLAS DE COMBATE Y MOVIMIENTO (PROYECTILES Y COLISIÓN DE MUROS)
+--------------------------------------------------------------------------------
+- Proyectiles (BULLET):
+  La bala se define con la forma BULLET (TYPE: PROJECTILE). El jugador dispara
+  proyectiles que viajan de forma automática por la grilla usando la lógica de
+  movimiento MOVE FORWARD.
+- Destrucción de Muros (WALL):
+  El juego contiene bloques destructibles de muros declarados como DEFINE SHAPE
+  WALL (TYPE: WALL). Estos muros se colocan simétricamente en el mapa. Cuando una
+  bala (del jugador o enemigo) impacta un bloque de muro, la celda se limpia
+  (valor 0) y la bala se consume:
+    self.grid[y][x] = 0
+    self.sonido_danio.play()
+
+--------------------------------------------------------------------------------
+4. DESGLOSE DE APORTES POR INTEGRANTE
+--------------------------------------------------------------------------------
+- USER:
+  * Diseño conceptual de la gramática BNF para soportar múltiples tanques,
+    jefe final y proyectiles.
+  * Definición de las reglas sintácticas del archivo gramática tanks.bnf.
+  * Pruebas del compilador y validación de la retrocompatibilidad con Snake
+    y Tetris.
+  * Validación final de la jugabilidad del combate de tanques y la derrota
+    del Final Boss.
+
+- Antigravity (AI Pair Programmer):
+  * Implementación y pruebas de validación del analizador sintáctico (Parser)
+    para el bloque BOSS y atributos del compilador (compiler.py).
+  * Refactorización y optimización completa del motor de ejecución (runtime.py)
+    para soportar dibujo matricial de entidades multicelda (2x2 tanques, 5x5 boss).
+  * Desarrollo del sistema de colisión precisa por máscara de bits para balas
+    del jugador, enemigos, muros destructibles y el Final Boss.
+  * Redacción del presente informe técnico y empaquetado final de entregables.
+================================================================================

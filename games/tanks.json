@@ -1,299 +1,299 @@
 {
-  "shapes": {
-    "WALL": {
-      "states": [
-        [
-          [
-            1
-          ]
-        ]
-      ], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "RECTANGLE", 
-      "color": "#888888", 
-      "speed": null, 
-      "hp": null, 
-      "type": "WALL", 
-      "damage": null, 
-      "effect": null
-    }, 
-    "PLAYER_TANK": {
-      "states": [
-        [
-          [
-            1, 
-            1
-          ], 
-          [
-            1, 
-            1
-          ]
-        ]
-      ], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "RECTANGLE", 
-      "color": "#0000FF", 
-      "speed": null, 
-      "hp": 100, 
-      "type": "PLAYER", 
-      "damage": 50, 
-      "effect": null
-    }, 
-    "ENEMY_TANK": {
-      "states": [
-        [
-          [
-            1, 
-            1
-          ], 
-          [
-            1, 
-            1
-          ]
-        ]
-      ], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "RECTANGLE", 
-      "color": "#FF0000", 
-      "speed": null, 
-      "hp": 50, 
-      "type": "ENEMY", 
-      "damage": 50, 
-      "effect": null
-    }, 
-    "BULLET": {
-      "states": [
-        [
-          [
-            1
-          ]
-        ]
-      ], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "RECTANGLE", 
-      "color": "#FFFF00", 
-      "speed": null, 
-      "hp": null, 
-      "type": "PROJECTILE", 
-      "damage": null, 
-      "effect": null
-    }, 
-    "FAST_ENEMY": {
-      "states": [
-        [
-          [
-            1, 
-            1
-          ], 
-          [
-            1, 
-            1
-          ]
-        ]
-      ], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "RECTANGLE", 
-      "color": "#FFA500", 
-      "speed": 2, 
-      "hp": 100, 
-      "type": "ENEMY", 
-      "damage": 50, 
-      "effect": null
-    }
-  }, 
-  "foods": {}, 
-  "tipo_juego": "TANKS", 
-  "powerups": {
-    "HAMMER": {
-      "states": [
-        [
-          [
-            1
-          ]
-        ]
-      ], 
-      "duration": null, 
-      "chance": 10, 
-      "form": "RECTANGLE", 
-      "color": "#00FF00", 
-      "speed": null, 
-      "hp": null, 
-      "type": null, 
-      "damage": null, 
-      "effect": null
-    }
-  }, 
-  "obstacles": {}, 
+  "tipo_juego": "TANKS",
   "config": {
     "grid_size": [
-      18, 
+      18,
       18
     ]
-  }, 
-  "events": {
-    "ON_BOSS_DEFEATED": [
-      {
-        "params": [], 
-        "accion": "GAME_OVER", 
-        "objeto": null
-      }
-    ], 
-    "ON_KEY_DOWN": [
-      {
-        "params": [
-          "DOWN"
-        ], 
-        "accion": "MOVE", 
-        "objeto": "PLAYER"
-      }
-    ], 
-    "ON_KEY_RIGHT": [
-      {
-        "params": [
-          "RIGHT"
-        ], 
-        "accion": "MOVE", 
-        "objeto": "PLAYER"
-      }
-    ], 
-    "ON_TARGET_SCORE": [
-      {
-        "params": [], 
-        "accion": "SPAWN", 
-        "objeto": "FINAL_FORTRESS"
-      }
-    ], 
-    "ON_START": [
-      {
-        "params": [
+  },
+  "shapes": {
+    "PLAYER_TANK": {
+      "form": "RECTANGLE",
+      "color": "#0000FF",
+      "chance": 10,
+      "type": "PLAYER",
+      "hp": 100,
+      "damage": 50,
+      "speed": null,
+      "states": [
+        [
           [
-            10, 
-            16
-          ]
-        ], 
-        "accion": "SPAWN", 
-        "objeto": "PLAYER_TANK"
-      }, 
-      {
-        "params": [
+            1,
+            1
+          ],
           [
-            5, 
-            2
+            1,
+            1
           ]
-        ], 
-        "accion": "SPAWN", 
-        "objeto": "ENEMY_TANK"
-      }, 
-      {
-        "params": [
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "ENEMY_TANK": {
+      "form": "RECTANGLE",
+      "color": "#FF0000",
+      "chance": 10,
+      "type": "ENEMY",
+      "hp": 50,
+      "damage": 50,
+      "speed": null,
+      "states": [
+        [
           [
-            10, 
-            2
-          ]
-        ], 
-        "accion": "SPAWN", 
-        "objeto": "ENEMY_TANK"
-      }, 
-      {
-        "params": [
+            1,
+            1
+          ],
           [
-            15, 
-            2
+            1,
+            1
           ]
-        ], 
-        "accion": "SPAWN", 
-        "objeto": "ENEMY_TANK"
-      }
-    ], 
-    "ON_KEY_SPACE": [
-      {
-        "params": [], 
-        "accion": "SPAWN", 
-        "objeto": "BULLET"
-      }
-    ], 
-    "ON_TIMER": [
-      {
-        "params": [], 
-        "accion": "SPAWN", 
-        "objeto": "HAMMER"
-      }
-    ], 
-    "ON_KEY_UP": [
-      {
-        "params": [
-          "UP"
-        ], 
-        "accion": "MOVE", 
-        "objeto": "PLAYER"
-      }
-    ], 
-    "ON_KEY_LEFT": [
-      {
-        "params": [
-          "LEFT"
-        ], 
-        "accion": "MOVE", 
-        "objeto": "PLAYER"
-      }
-    ], 
-    "ON_ENEMY_DESTROYED": [
-      {
-        "params": [], 
-        "accion": "INCREASE_SCORE", 
-        "objeto": "100"
-      }
-    ]
-  }, 
-  "levels": {}, 
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "FAST_ENEMY": {
+      "form": "RECTANGLE",
+      "color": "#FFA500",
+      "chance": 10,
+      "type": "ENEMY",
+      "hp": 100,
+      "damage": 50,
+      "speed": 2,
+      "states": [
+        [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "BULLET": {
+      "form": "RECTANGLE",
+      "color": "#FFFF00",
+      "chance": 10,
+      "type": "PROJECTILE",
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    },
+    "WALL": {
+      "form": "RECTANGLE",
+      "color": "#888888",
+      "chance": 10,
+      "type": "WALL",
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    }
+  },
+  "foods": {},
+  "obstacles": {},
+  "powerups": {
+    "HAMMER": {
+      "form": "RECTANGLE",
+      "color": "#00FF00",
+      "chance": 10,
+      "type": null,
+      "hp": null,
+      "damage": null,
+      "speed": null,
+      "states": [
+        [
+          [
+            1
+          ]
+        ]
+      ],
+      "effect": null,
+      "duration": null
+    }
+  },
+  "levels": {},
   "boss": {
-    "color": "#800080", 
+    "name": "FINAL_FORTRESS",
+    "color": "#800080",
+    "hp": 200,
+    "damage": 100,
     "states": [
       [
         [
-          1, 
-          1, 
-          1, 
-          1, 
+          1,
+          1,
+          1,
+          1,
           1
-        ], 
+        ],
         [
-          1, 
-          0, 
-          0, 
-          0, 
+          1,
+          0,
+          0,
+          0,
           1
-        ], 
+        ],
         [
-          1, 
-          1, 
-          1, 
-          1, 
+          1,
+          1,
+          1,
+          1,
           1
-        ], 
+        ],
         [
-          1, 
-          0, 
-          1, 
-          0, 
+          1,
+          0,
+          1,
+          0,
           1
-        ], 
+        ],
         [
-          1, 
-          1, 
-          1, 
-          1, 
+          1,
+          1,
+          1,
+          1,
           1
         ]
       ]
-    ], 
-    "hp": 200, 
-    "name": "FINAL_FORTRESS", 
-    "damage": 100
+    ]
+  },
+  "events": {
+    "ON_START": [
+      {
+        "accion": "SPAWN",
+        "objeto": "PLAYER_TANK",
+        "params": [
+          [
+            10,
+            16
+          ]
+        ]
+      },
+      {
+        "accion": "SPAWN",
+        "objeto": "ENEMY_TANK",
+        "params": [
+          [
+            5,
+            2
+          ]
+        ]
+      },
+      {
+        "accion": "SPAWN",
+        "objeto": "ENEMY_TANK",
+        "params": [
+          [
+            10,
+            2
+          ]
+        ]
+      },
+      {
+        "accion": "SPAWN",
+        "objeto": "ENEMY_TANK",
+        "params": [
+          [
+            15,
+            2
+          ]
+        ]
+      }
+    ],
+    "ON_KEY_LEFT": [
+      {
+        "accion": "MOVE",
+        "objeto": "PLAYER",
+        "params": [
+          "LEFT"
+        ]
+      }
+    ],
+    "ON_KEY_RIGHT": [
+      {
+        "accion": "MOVE",
+        "objeto": "PLAYER",
+        "params": [
+          "RIGHT"
+        ]
+      }
+    ],
+    "ON_KEY_UP": [
+      {
+        "accion": "MOVE",
+        "objeto": "PLAYER",
+        "params": [
+          "UP"
+        ]
+      }
+    ],
+    "ON_KEY_DOWN": [
+      {
+        "accion": "MOVE",
+        "objeto": "PLAYER",
+        "params": [
+          "DOWN"
+        ]
+      }
+    ],
+    "ON_KEY_SPACE": [
+      {
+        "accion": "SPAWN",
+        "objeto": "BULLET",
+        "params": []
+      }
+    ],
+    "ON_ENEMY_DESTROYED": [
+      {
+        "accion": "INCREASE_SCORE",
+        "objeto": "100",
+        "params": []
+      }
+    ],
+    "ON_TIMER": [
+      {
+        "accion": "SPAWN",
+        "objeto": "HAMMER",
+        "params": []
+      }
+    ],
+    "ON_TARGET_SCORE": [
+      {
+        "accion": "SPAWN",
+        "objeto": "FINAL_FORTRESS",
+        "params": []
+      }
+    ],
+    "ON_BOSS_DEFEATED": [
+      {
+        "accion": "GAME_OVER",
+        "objeto": null,
+        "params": []
+      }
+    ]
   }
 }

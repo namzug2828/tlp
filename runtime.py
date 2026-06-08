@@ -2,7 +2,34 @@ import sys
 import json
 import time
 import random
-import pygame
+
+try:
+    import pygame
+    HAS_PYGAME = True
+except ImportError:
+    HAS_PYGAME = False
+
+if not HAS_PYGAME:
+    class DummySound:
+        def __init__(self, *args, **kwargs): pass
+        def play(self, *args, **kwargs): pass
+        def stop(self, *args, **kwargs): pass
+
+    class DummyMusic:
+        def load(self, *args, **kwargs): pass
+        def play(self, *args, **kwargs): pass
+        def stop(self, *args, **kwargs): pass
+
+    class DummyMixer:
+        def init(self, *args, **kwargs): pass
+        music = DummyMusic()
+        Sound = DummySound
+
+    class DummyPygame:
+        mixer = DummyMixer()
+    
+    pygame = DummyPygame()
+
 try:
     import Tkinter as tk
     import tkMessageBox
@@ -149,17 +176,32 @@ class Juego:
             self.tiempo_inmunidad = 0
             self.contador_rondas = 0
             self.velocidad_gravedad = 0.15
-            self.nivel_actual = self.seleccionar_nivel()
+            if self.datos_juego.get('levels'):
+                self.nivel_actual = self.seleccionar_nivel()
+            else:
+                self.nivel_actual = "BABY"
             self.configurar_nivel()
 
         if self.tipo_juego == 'TANKS':
 
             self.player_x = 0
             self.player_y = 0
-
+            self.player_w = 1
+            self.player_h = 1
             self.player_hp = 200
-
+            self.player_max_hp = 200
+            self.player_color = "#0000FF"
             self.player_direccion = "UP"
+
+            for name, shape in self.shapes.items():
+                if shape.get('type') == 'PLAYER':
+                    self.player_hp = shape.get('hp', 200)
+                    self.player_max_hp = self.player_hp
+                    self.player_color = shape.get('color', '#0000FF')
+                    if shape.get('states'):
+                        self.player_w = len(shape['states'][0][0])
+                        self.player_h = len(shape['states'][0])
+                    break
 
             self.enemigos = []
             self.enemigos_rapidos = []
@@ -177,6 +219,7 @@ class Juego:
             self.timer_enemigos = 0
 
             self.velocidad_gravedad = 0.05
+            self.tanks_generar_muros()
 
         self.timer_gravedad = 0
         self.ejecutar_evento('ON_START')
@@ -232,28 +275,38 @@ class Juego:
         elif self.tipo_juego == 'TANKS':
 
             if key == 'UP':
-
-                self.player_direccion = "UP"
-                self.tanks_mover_jugador(0, -1)
+                if 'ON_KEY_UP' in self.datos_juego.get('events', {}):
+                    self.ejecutar_evento('ON_KEY_UP')
+                else:
+                    self.player_direccion = "UP"
+                    self.tanks_mover_jugador(0, -1)
 
             elif key == 'DOWN':
-
-                self.player_direccion = "DOWN"
-                self.tanks_mover_jugador(0, 1)
+                if 'ON_KEY_DOWN' in self.datos_juego.get('events', {}):
+                    self.ejecutar_evento('ON_KEY_DOWN')
+                else:
+                    self.player_direccion = "DOWN"
+                    self.tanks_mover_jugador(0, 1)
 
             elif key == 'LEFT':
-
-                self.player_direccion = "LEFT"
-                self.tanks_mover_jugador(-1, 0)
+                if 'ON_KEY_LEFT' in self.datos_juego.get('events', {}):
+                    self.ejecutar_evento('ON_KEY_LEFT')
+                else:
+                    self.player_direccion = "LEFT"
+                    self.tanks_mover_jugador(-1, 0)
 
             elif key == 'RIGHT':
-
-                self.player_direccion = "RIGHT"
-                self.tanks_mover_jugador(1, 0)
+                if 'ON_KEY_RIGHT' in self.datos_juego.get('events', {}):
+                    self.ejecutar_evento('ON_KEY_RIGHT')
+                else:
+                    self.player_direccion = "RIGHT"
+                    self.tanks_mover_jugador(1, 0)
 
             elif key == 'SPACE':
-
-                self.tanks_disparar()
+                if 'ON_KEY_SPACE' in self.datos_juego.get('events', {}):
+                    self.ejecutar_evento('ON_KEY_SPACE')
+                else:
+                    self.tanks_disparar()
 
     def seleccionar_nivel(self):
 
@@ -318,26 +371,44 @@ class Juego:
         self.obstaculos_habilitados = False
         self.powerup_habilitado = False
 
-        if self.nivel_actual == "BABY":
+        level_data = {}
+        if self.datos_juego.get('levels'):
+            nivel_keys = self.datos_juego['levels'].keys()
+            matched_key = None
+            for key in nivel_keys:
+                if key.upper() == self.nivel_actual.upper():
+                    matched_key = key
+                    break
+                if "ENTHU" in key.upper() and "ENTHU" in self.nivel_actual.upper():
+                    matched_key = key
+                    break
+                if "ENTUS" in key.upper() and "ENTHU" in self.nivel_actual.upper():
+                    matched_key = key
+                    break
+            
+            if matched_key:
+                level_data = self.datos_juego['levels'][matched_key]
 
-            self.velocidad_gravedad = 0.15
+        if level_data:
+            speed_val = level_data.get("speed", 0.15)
+            if speed_val > 1:
+                self.velocidad_gravedad = speed_val / 1000.0
+            else:
+                self.velocidad_gravedad = speed_val
+        else:
+            if self.nivel_actual == "BABY":
+                self.velocidad_gravedad = 0.15
+            elif self.nivel_actual == "ENTHUSIAST":
+                self.velocidad_gravedad = 0.12
+            elif self.nivel_actual == "NYAN_CAT":
+                self.velocidad_gravedad = 0.08
 
-        elif self.nivel_actual == "ENTHUSIAST":
-
-            self.velocidad_gravedad = 0.12
-
+        if self.nivel_actual == "ENTHUSIAST":
             self.veneno_habilitado = True
-
             self.powerup_habilitado = True
-
         elif self.nivel_actual == "NYAN_CAT":
-
-            self.velocidad_gravedad = 0.08
-
             self.veneno_habilitado = True
-
             self.obstaculos_habilitados = True
-
             self.powerup_habilitado = True
 
 
@@ -487,39 +558,52 @@ class Juego:
 
         if self.tipo_juego == 'TANKS':
 
-            self.dibujar_celda(
-                self.player_x,
-                self.player_y,
-                "#0000FF"
-            )
+            # 1. Draw Player Tank according to its shape state
+            player_shape = None
+            for name, shape in self.shapes.items():
+                if shape.get('type') == 'PLAYER':
+                    player_shape = shape
+                    break
+            if player_shape and player_shape.get('states'):
+                matriz = player_shape['states'][0]
+                for dy, fila in enumerate(matriz):
+                    for dx, celda in enumerate(fila):
+                        if celda == 1:
+                            self.dibujar_celda(self.player_x + dx, self.player_y + dy, self.player_color)
+            else:
+                self.dibujar_celda(self.player_x, self.player_y, self.player_color)
 
+            # 2. Draw Enemies
             for enemigo in self.enemigos:
+                shape_name = enemigo["name"]
+                shape_info = self.shapes.get(shape_name, {})
+                color = enemigo.get("color", "#FF0000")
+                if shape_info and shape_info.get("states"):
+                    matriz = shape_info["states"][0]
+                    for dy, fila in enumerate(matriz):
+                        for dx, celda in enumerate(fila):
+                            if celda == 1:
+                                self.dibujar_celda(enemigo["x"] + dx, enemigo["y"] + dy, color)
+                else:
+                    self.dibujar_celda(enemigo["x"], enemigo["y"], color)
 
-                self.dibujar_celda(
-                enemigo["x"],
-                enemigo["y"],
-                "#FF0000"
-                )
-
-            for enemigo in self.enemigos_rapidos:
-
-                self.dibujar_celda(
-                    enemigo["x"],
-                    enemigo["y"],
-                    "#0088FF"
-                )
-
+            # 3. Draw Player Bullets
+            bullet_color = "#FFFF00"
+            bullet_form = "CIRCLE"
+            if "BULLET" in self.shapes:
+                bullet_color = self.shapes["BULLET"].get("color", "#FFFF00")
+                bullet_form = self.shapes["BULLET"].get("form", "CIRCLE")
+                
             for bala in self.balas_jugador:
-
                 self.dibujar_celda(
                     bala["x"],
                     bala["y"],
-                    "#FFFF00",
-                    "CIRCLE"
+                    bullet_color,
+                    bullet_form
                 )
 
+            # 4. Draw Enemy Bullets
             for bala in self.balas_enemigos:
-
                 self.dibujar_celda(
                     bala["x"],
                     bala["y"],
@@ -527,10 +611,9 @@ class Juego:
                     "CIRCLE"
                 )
 
+            # 5. Draw Hammer
             if self.posicion_hammer:
-
                 x, y = self.posicion_hammer
-
                 self.dibujar_celda(
                     x,
                     y,
@@ -538,24 +621,29 @@ class Juego:
                     "CIRCLE"
                 )
 
+            # 6. Draw Boss
             if self.boss_activo:
-
-                if self.boss_hp > 100:
-                    color_boss = "#800080"
-                elif self.boss_hp > 50:
-                    color_boss = "#FF0000"
+                boss_info = self.datos_juego.get('boss', {})
+                boss_states = boss_info.get('states', [])
+                if boss_states:
+                    matriz_boss = boss_states[0]
+                    for dy, fila in enumerate(matriz_boss):
+                        for dx, celda in enumerate(fila):
+                            if celda == 1:
+                                self.dibujar_celda(
+                                    self.boss_x + dx,
+                                    self.boss_y + dy,
+                                    self.boss_color
+                                )
                 else:
-                    color_boss = "#FF8800"
-
-                for dy in range(5):
-
-                    for dx in range(5):
-
-                        self.dibujar_celda(
-                            self.boss_x + dx,
-                            self.boss_y + dy,
-                            color_boss
-                        )
+                    # Fallback solid block
+                    for dy in range(self.boss_h):
+                        for dx in range(self.boss_w):
+                            self.dibujar_celda(
+                                self.boss_x + dx,
+                                self.boss_y + dy,
+                                self.boss_color
+                             )
 
     def dibujar_celda(self, x, y, color, forma="RECTANGLE"):
         ts = self.taman_celda
@@ -635,25 +723,30 @@ class Juego:
                 if self.tipo_juego == 'TANKS':
 
                     if verbo == 'SPAWN':
-
                         if objeto == 'PLAYER_TANK':
-                            self.tanks_spawn_player()
+                            coords = accion['params'][0] if accion['params'] else None
+                            self.tanks_spawn_player(coords)
 
-                        elif objeto == 'ENEMY_TANK':
-                            self.tanks_spawn_enemy()
+                        elif objeto == 'ENEMY_TANK' or (objeto in self.shapes and self.shapes[objeto].get('type') == 'ENEMY'):
+                            coords = accion['params'][0] if accion['params'] else None
+                            self.tanks_spawn_enemy(objeto, coords)
 
                         elif objeto == 'BULLET':
                             self.tanks_disparar()
 
+                        elif objeto == 'HAMMER':
+                            self.tanks_spawn_hammer()
+
+                        elif objeto == self.datos_juego.get('boss', {}).get('name'):
+                            self.tanks_spawn_boss()
+
                     elif verbo == 'MOVE':
-
                         if objeto == 'PLAYER':
-
                             direccion = accion['params'][0]
-
-                            self.tanks_mover_jugador(
-                                direccion
-                            )
+                            self.tanks_mover_jugador(direccion)
+                        elif objeto == 'BULLET':
+                            if accion['params'] and accion['params'][0] == 'FORWARD':
+                                self.tanks_actualizar_balas()
 
 
     def tetris_spawn_pieza(self):
@@ -955,114 +1048,137 @@ class Juego:
         pass
 
 
-    def tanks_spawn_player(self):
+    def tanks_spawn_player(self, coords=None):
+        self.player_w = 1
+        self.player_h = 1
+        self.player_color = "#0000FF"
+        
+        player_shape = None
+        for name, shape in self.shapes.items():
+            if shape.get('type') == 'PLAYER':
+                player_shape = shape
+                self.player_hp = shape.get('hp', 200)
+                self.player_max_hp = self.player_hp
+                self.player_color = shape.get('color', '#0000FF')
+                if shape.get('states'):
+                    self.player_w = len(shape['states'][0][0])
+                    self.player_h = len(shape['states'][0])
+                break
+        
+        if coords:
+            self.player_x = coords[0]
+            self.player_y = coords[1]
+        else:
+            self.player_x = (self.ancho - self.player_w) // 2
+            self.player_y = self.alto - self.player_h - 1
 
-        self.player_x = self.ancho // 2
-
-        self.player_y = self.alto - 2
-
-
-    def tanks_mover_jugador(self, dx, dy):
+    def tanks_mover_jugador(self, dx, dy=None):
+        if dy is None:
+            direccion = dx
+            dx, dy = 0, 0
+            if direccion == "LEFT": dx = -1
+            elif direccion == "RIGHT": dx = 1
+            elif direccion == "UP": dy = -1
+            elif direccion == "DOWN": dy = 1
+            self.player_direccion = direccion
+        else:
+            if dx == -1: self.player_direccion = "LEFT"
+            elif dx == 1: self.player_direccion = "RIGHT"
+            elif dy == -1: self.player_direccion = "UP"
+            elif dy == 1: self.player_direccion = "DOWN"
 
         nuevo_x = self.player_x + dx
         nuevo_y = self.player_y + dy
 
-        if 0 <= nuevo_x < self.ancho and \
-           0 <= nuevo_y < self.alto:
-
+        if 0 <= nuevo_x <= self.ancho - self.player_w and \
+           0 <= nuevo_y <= self.alto - self.player_h:
             self.player_x = nuevo_x
             self.player_y = nuevo_y
 
     def tanks_disparar(self):
-
         self.sonido_disparo.play()
-
-        dx = 0
-        dy = 0
-
+        dx, dy = 0, 0
         if self.player_direccion == "UP":
             dy = -1
-
         elif self.player_direccion == "DOWN":
             dy = 1
-
         elif self.player_direccion == "LEFT":
             dx = -1
-
         elif self.player_direccion == "RIGHT":
             dx = 1
 
-        self.balas_jugador.append(
-            {
-                "x": self.player_x + dx,
-                "y": self.player_y + dy,
-                "dx": dx,
-                "dy": dy
-            }
-        )
+        bx = self.player_x + (self.player_w // 2) + dx
+        by = self.player_y + (self.player_h // 2) + dy
+
+        self.balas_jugador.append({
+            "x": bx,
+            "y": by,
+            "dx": dx,
+            "dy": dy
+        })
 
     def tanks_actualizar_balas(self):
-
         nuevas_balas = []
-
         for bala in self.balas_jugador:
-
             bala["x"] += bala["dx"]
-
             bala["y"] += bala["dy"]
-
-            if (
-                bala["x"] >= 0 and
-                bala["x"] < self.ancho and
-                bala["y"] >= 0 and
-                bala["y"] < self.alto
-            ):
-
-                nuevas_balas.append(
-                    bala
-                )
-
+            if 0 <= bala["x"] < self.ancho and 0 <= bala["y"] < self.alto:
+                nuevas_balas.append(bala)
         self.balas_jugador = nuevas_balas
+
         nuevas = []
-
         for bala in self.balas_enemigos:
-
             bala["x"] += bala["dx"]
             bala["y"] += bala["dy"]
-
-            if (
-                0 <= bala["x"] < self.ancho and
-                0 <= bala["y"] < self.alto
-            ):
-
+            if 0 <= bala["x"] < self.ancho and 0 <= bala["y"] < self.alto:
                 nuevas.append(bala)
-
         self.balas_enemigos = nuevas
 
-    def tanks_spawn_enemy(self):
+    def tanks_spawn_enemy(self, nombre_shape=None, coords=None):
+        if not nombre_shape:
+            enemy_shapes = [name for name, shape in self.shapes.items() if shape.get('type') == 'ENEMY']
+            if enemy_shapes:
+                nombre_shape = random.choice(enemy_shapes)
+            else:
+                nombre_shape = "ENEMY_TANK"
 
-        x = random.randint(
-            0,
-            self.ancho - 1
-        )
+        shape_info = self.shapes.get(nombre_shape, {})
+        hp = shape_info.get("hp", 50)
+        damage = shape_info.get("damage", 10)
+        speed = shape_info.get("speed", 1)
+        color = shape_info.get("color", "#FF0000")
 
-        y = 1
+        w, h = 1, 1
+        if shape_info.get("states"):
+            w = len(shape_info["states"][0][0])
+            h = len(shape_info["states"][0])
 
-        self.enemigos.append(
-            {
-                "x": x,
-                "y": y,
-                "hp": 50,
-                "damage": 10
-            }
-        )
+        if coords:
+            x, y = coords[0], coords[1]
+        else:
+            x = random.randint(0, self.ancho - w)
+            y = 1
+
+        self.enemigos.append({
+            "name": nombre_shape,
+            "x": x,
+            "y": y,
+            "w": w,
+            "h": h,
+            "hp": hp,
+            "max_hp": hp,
+            "damage": damage,
+            "speed": speed,
+            "color": color,
+            "_tick": 0,
+            "direccion": "DOWN"
+        })
 
     def tanks_actualizar_enemigos(self):
-
         for enemigo in self.enemigos:
-
             enemigo["_tick"] = enemigo.get("_tick", 0) + 1
-            if enemigo["_tick"] % 2 != 0:
+            move_freq = 2 if enemigo.get("speed", 1) <= 1 else 1
+            if enemigo["_tick"] % move_freq != 0:
                 continue
 
             if random.random() < 0.7:
@@ -1081,65 +1197,21 @@ class Juego:
             nuevo_x = enemigo["x"] + dx
             nuevo_y = enemigo["y"] + dy
 
-            if 0 <= nuevo_x < self.ancho:
+            if 0 <= nuevo_x <= self.ancho - enemigo["w"]:
                 enemigo["x"] = nuevo_x
-
-            if 0 <= nuevo_y < self.alto:
+            if 0 <= nuevo_y <= self.alto - enemigo["h"]:
                 enemigo["y"] = nuevo_y
 
     def tanks_actualizar_enemigos_rapidos(self):
-
-        for enemigo in self.enemigos_rapidos:
-
-            enemigo["_tick"] = enemigo.get("_tick", 0) + 1
-            if enemigo["_tick"] % 2 != 0:
-                continue
-
-            if random.random() < 0.9:
-                dx, dy = 0, 0
-                if self.player_x > enemigo["x"]: dx = 1
-                elif self.player_x < enemigo["x"]: dx = -1
-                if self.player_y > enemigo["y"]: dy = 1
-                elif self.player_y < enemigo["y"]: dy = -1
-                if dx != 0 and dy != 0:
-                    if random.random() < 0.5: dy = 0
-                    else: dx = 0
-            else:
-                dx = random.choice([-1, 0, 1])
-                dy = random.choice([0, 1])
-
-            nuevo_x = enemigo["x"] + dx
-            nuevo_y = enemigo["y"] + dy
-
-            if 0 <= nuevo_x < self.ancho:
-                enemigo["x"] = nuevo_x
-
-            if 0 <= nuevo_y < self.alto:
-                enemigo["y"] = nuevo_y
+        pass
 
     def tanks_spawn_fast_enemy(self):
-
-        x = random.randint(
-            0,
-            self.ancho - 1
-        )
-
-        self.enemigos_rapidos.append(
-            {
-                "x": x,
-                "y": 1,
-                "hp": 100,
-                "speed": 2,
-                "damage": 10
-            }
-        )
+        self.tanks_spawn_enemy("FAST_ENEMY")
 
     def tanks_disparo_enemigos(self):
-
         for enemigo in self.enemigos:
-
-            if random.randint(1, 15) == 1:
-
+            rate = 15 if enemigo.get("speed", 1) <= 1 else 10
+            if random.randint(1, rate) == 1:
                 dx, dy = 0, 0
                 if self.player_x > enemigo["x"]: dx = 1
                 elif self.player_x < enemigo["x"]: dx = -1
@@ -1151,295 +1223,249 @@ class Juego:
                     dx = 0
 
                 if dx != 0 or dy != 0:
+                    bx = enemigo["x"] + (enemigo["w"] // 2) + dx
+                    by = enemigo["y"] + (enemigo["h"] // 2) + dy
                     self.balas_enemigos.append({
-                        "x": enemigo["x"] + dx,
-                        "y": enemigo["y"] + dy,
+                        "x": bx,
+                        "y": by,
                         "dx": dx,
-                        "dy": dy
+                        "dy": dy,
+                        "damage": enemigo.get("damage", 10)
                     })
 
     def tanks_disparo_enemigos_rapidos(self):
-
-        for enemigo in self.enemigos_rapidos:
-
-            if random.randint(1, 10) == 1:
-
-                dx, dy = 0, 0
-                if self.player_x > enemigo["x"]: dx = 1
-                elif self.player_x < enemigo["x"]: dx = -1
-                if self.player_y > enemigo["y"]: dy = 1
-                elif self.player_y < enemigo["y"]: dy = -1
-                if abs(self.player_x - enemigo["x"]) >= abs(self.player_y - enemigo["y"]):
-                    dy = 0
-                else:
-                    dx = 0
-
-                if dx != 0 or dy != 0:
-                    self.balas_enemigos.append({
-                        "x": enemigo["x"] + dx,
-                        "y": enemigo["y"] + dy,
-                        "dx": dx,
-                        "dy": dy
-                    })
+        pass
 
     def tanks_spawn_boss(self):
-
         self.boss_activo = True
+        boss_info = self.datos_juego.get('boss', {})
+        self.boss_hp = boss_info.get('hp', 200)
+        self.boss_max_hp = self.boss_hp
+        self.boss_damage = boss_info.get('damage', 100)
+        self.boss_color = boss_info.get('color', '#800080')
 
-        self.boss_hp = 1500
+        boss_states = boss_info.get('states', [])
+        if boss_states:
+            self.boss_w = len(boss_states[0][0])
+            self.boss_h = len(boss_states[0])
+        else:
+            self.boss_w = 5
+            self.boss_h = 5
 
-        self.boss_x = self.ancho // 2 - 2
-
+        self.boss_x = (self.ancho - self.boss_w) // 2
         self.boss_y = 1
-
         self.boss_timer = 0
+        self.enemigos = []
 
     def tanks_boss_tick(self):
-
         if not self.boss_activo:
             return
 
         self.boss_timer += 1
+        hp_pct = self.boss_hp / self.boss_max_hp if self.boss_max_hp > 0 else 0
 
-        if self.boss_hp > 700:
+        if hp_pct > 0.5:
             cadencia = 20
             direcciones = [(1,0),(-1,0),(0,1),(0,-1)]
-
-        elif self.boss_hp > 200:
+        elif hp_pct > 0.2:
             cadencia = 15
             direcciones = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,1),(1,-1),(-1,-1)]
-
             if self.boss_timer % 25 == 0:
-                if self.player_x > self.boss_x + 2:
-                    self.boss_x = min(self.boss_x + 1, self.ancho - 5)
-                elif self.player_x < self.boss_x + 2:
+                target_x = self.player_x - (self.boss_w // 2)
+                if self.boss_x < target_x:
+                    self.boss_x = min(self.boss_x + 1, self.ancho - self.boss_w)
+                elif self.boss_x > target_x:
                     self.boss_x = max(self.boss_x - 1, 0)
-
         else:
             cadencia = 8
             direcciones = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,1),(1,-1),(-1,-1)]
-
             if self.boss_timer % 15 == 0:
-                if self.player_x > self.boss_x + 2:
-                    self.boss_x = min(self.boss_x + 1, self.ancho - 5)
-                elif self.player_x < self.boss_x + 2:
+                target_x = self.player_x - (self.boss_w // 2)
+                if self.boss_x < target_x:
+                    self.boss_x = min(self.boss_x + 1, self.ancho - self.boss_w)
+                elif self.boss_x > target_x:
                     self.boss_x = max(self.boss_x - 1, 0)
 
         if self.boss_timer % cadencia == 0:
-            centro_x = self.boss_x + 2
-            centro_y = self.boss_y + 2
+            centro_x = self.boss_x + (self.boss_w // 2)
+            centro_y = self.boss_y + (self.boss_h // 2)
             for dx, dy in direcciones:
                 self.balas_enemigos.append({
                     "x": centro_x + dx,
                     "y": centro_y + dy,
                     "dx": dx,
-                    "dy": dy
+                    "dy": dy,
+                    "damage": self.boss_damage
                 })
 
     def tanks_spawn_hammer(self):
+        for _ in range(50):
+            x = random.randint(0, self.ancho - 1)
+            y = random.randint(0, self.alto - 1)
+            if self.grid[y][x] == 0:
+                if not (self.player_x <= x < self.player_x + self.player_w and
+                        self.player_y <= y < self.player_y + self.player_h):
+                    if not (self.boss_activo and self.boss_x <= x < self.boss_x + self.boss_w and
+                            self.boss_y <= y < self.boss_y + self.boss_h):
+                        self.posicion_hammer = (x, y)
+                        break
 
-        self.posicion_hammer = (
+    def tanks_generar_muros(self):
+        self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
+        wall_color = "#888888"
+        if "WALL" in self.shapes:
+            wall_color = self.shapes["WALL"].get("color", "#888888")
 
-            random.randint(
-                0,
-                self.ancho - 1
-            ),
-
-            random.randint(
-                0,
-                self.alto - 1
-            )
-
-        )
+        muros = [
+            (3, 4), (4, 4), (5, 4), (12, 4), (13, 4), (14, 4),
+            (3, 12), (4, 12), (5, 12), (12, 12), (13, 12), (14, 12),
+            (8, 7), (9, 7), (8, 8), (9, 8), (8, 9), (9, 9)
+        ]
+        for x, y in muros:
+            if 0 <= x < self.ancho and 0 <= y < self.alto:
+                self.grid[y][x] = wall_color
 
     def tanks_verificar_colisiones(self):
+        balas_jugador_filtradas = []
+        for bala in self.balas_jugador:
+            x, y = bala["x"], bala["y"]
+            if 0 <= x < self.ancho and 0 <= y < self.alto and self.grid[y][x] != 0:
+                self.grid[y][x] = 0
+                self.sonido_danio.play()
+                continue
+            balas_jugador_filtradas.append(bala)
+        self.balas_jugador = balas_jugador_filtradas
+
+        balas_enemigos_filtradas = []
+        for bala in self.balas_enemigos:
+            x, y = bala["x"], bala["y"]
+            if 0 <= x < self.ancho and 0 <= y < self.alto and self.grid[y][x] != 0:
+                self.grid[y][x] = 0
+                self.sonido_danio.play()
+                continue
+            balas_enemigos_filtradas.append(bala)
+        self.balas_enemigos = balas_enemigos_filtradas
+
+        if self.boss_activo:
+            boss_info = self.datos_juego.get('boss', {})
+            boss_states = boss_info.get('states', [])
+            if boss_states:
+                matriz_boss = boss_states[0]
+                balas_restantes = []
+                for bala in self.balas_jugador:
+                    bx, by = bala["x"], bala["y"]
+                    if (self.boss_x <= bx < self.boss_x + self.boss_w and
+                        self.boss_y <= by < self.boss_y + self.boss_h):
+                        rx, ry = bx - self.boss_x, by - self.boss_y
+                        if matriz_boss[ry][rx] == 1:
+                            self.boss_hp -= 50
+                            self.sonido_danio.play()
+                            if self.boss_hp <= 0:
+                                self.boss_activo = False
+                                self.victoria = True
+                                self.juego_terminado = True
+                                self.ejecutar_evento('ON_BOSS_DEFEATED')
+                            continue
+                    balas_restantes.append(bala)
+                self.balas_jugador = balas_restantes
 
         balas_restantes = []
-
         for bala in self.balas_jugador:
-
+            bx, by = bala["x"], bala["y"]
             impacto = False
-
-            if self.boss_activo:
-
-                if (
-                    bala["x"] >= self.boss_x and
-                    bala["x"] < self.boss_x + 5 and
-                    bala["y"] >= self.boss_y and
-                    bala["y"] < self.boss_y + 5
-                ):
-
-                    self.boss_hp -= 50
-
-                    impacto = True
-
-                    if self.boss_hp <= 0:
-
-                        self.boss_activo = False
-
-                        tkMessageBox.showinfo(
-                            "Victoria",
-                            "Boss derrotado"
-                        )
-
-                        self.juego_terminado = True
-
-            for enemigo in self.enemigos:
-
-                if (
-                    bala["x"] == enemigo["x"] and
-                    bala["y"] == enemigo["y"]
-                ):
-
-                    enemigo["hp"] -= 50
-
-                    impacto = True
-
-                    if enemigo["hp"] <= 0:
-
-                        self.enemigos.remove(
-                            enemigo
-                        )
-
-                        self.puntuacion += 100
-
-                    break
-
-            for enemigo in self.enemigos_rapidos:
-
-                if (
-                    bala["x"] == enemigo["x"] and
-                    bala["y"] == enemigo["y"]
-                ):
-
-                    enemigo["hp"] -= 50
-
-                    impacto = True
-
-                    if enemigo["hp"] <= 0:
-
-                        self.enemigos_rapidos.remove(
-                            enemigo
-                        )
-
-                        self.puntuacion += 100
-
-                    break
-
+            for enemigo in list(self.enemigos):
+                ex, ey = enemigo["x"], enemigo["y"]
+                ew, eh = enemigo["w"], enemigo["h"]
+                if ex <= bx < ex + ew and ey <= by < ey + eh:
+                    rx, ry = bx - ex, by - ey
+                    shape_info = self.shapes.get(enemigo["name"], {})
+                    if shape_info.get("states") and shape_info["states"][0][ry][rx] == 1:
+                        enemigo["hp"] -= 50
+                        self.sonido_danio.play()
+                        impacto = True
+                        if enemigo["hp"] <= 0:
+                            if enemigo in self.enemigos:
+                                self.enemigos.remove(enemigo)
+                            self.puntuacion += 100
+                            self.ejecutar_evento('ON_ENEMY_DESTROYED')
+                        break
             if not impacto:
-
-                balas_restantes.append(
-                    bala
-                )
-
+                balas_restantes.append(bala)
         self.balas_jugador = balas_restantes
 
         balas_enemigas_restantes = []
-
         for bala in self.balas_enemigos:
-
-            if (
-                bala["x"] == self.player_x and
-                bala["y"] == self.player_y
-            ):
-                self.player_hp -= 25
-
-                self.sonido_danio.play()
-                
-
-                if self.player_hp <= 0:
-                    self.juego_terminado = True
-
-            else:
+            bx, by = bala["x"], bala["y"]
+            impacto = False
+            if (self.player_x <= bx < self.player_x + self.player_w and
+                self.player_y <= by < self.player_y + self.player_h):
+                rx, ry = bx - self.player_x, by - self.player_y
+                player_shape = None
+                for name, shape in self.shapes.items():
+                    if shape.get('type') == 'PLAYER':
+                        player_shape = shape
+                        break
+                if player_shape and player_shape.get('states'):
+                    if player_shape['states'][0][ry][rx] == 1:
+                        damage_taken = bala.get("damage", 25)
+                        self.player_hp -= damage_taken
+                        self.sonido_danio.play()
+                        impacto = True
+                        if self.player_hp <= 0:
+                            self.juego_terminado = True
+                else:
+                    self.player_hp -= 25
+                    self.sonido_danio.play()
+                    impacto = True
+                    if self.player_hp <= 0:
+                        self.juego_terminado = True
+            if not impacto:
                 balas_enemigas_restantes.append(bala)
-
         self.balas_enemigos = balas_enemigas_restantes
 
+        px, py, pw, ph = self.player_x, self.player_y, self.player_w, self.player_h
         for enemigo in list(self.enemigos):
-
-            if (
-                enemigo["x"] == self.player_x and
-                enemigo["y"] == self.player_y
-            ):
+            ex, ey, ew, eh = enemigo["x"], enemigo["y"], enemigo["w"], enemigo["h"]
+            if (px < ex + ew and px + pw > ex and
+                py < ey + eh and py + ph > ey):
                 self.player_hp -= enemigo["damage"]
-
                 self.sonido_danio.play()
-
-                self.enemigos.remove(enemigo)
+                if enemigo in self.enemigos:
+                    self.enemigos.remove(enemigo)
                 self.puntuacion += 50
-
-                if self.player_hp <= 0:
-                    self.juego_terminado = True
-
-        for enemigo in list(self.enemigos_rapidos):
-
-            if (
-                enemigo["x"] == self.player_x and
-                enemigo["y"] == self.player_y
-            ):
-                self.player_hp -= enemigo["damage"]
-
-                self.sonido_danio.play()
-
-                self.enemigos_rapidos.remove(enemigo)
-                self.puntuacion += 50
-
                 if self.player_hp <= 0:
                     self.juego_terminado = True
 
     def tanks_game_tick(self):
-
         self.timer_enemigos += 1
-
         if self.timer_enemigos > 40:
-
             self.timer_enemigos = 0
+            if not self.boss_activo:
+                self.tanks_spawn_enemy()
 
-            self.tanks_spawn_enemy()
+        if (self.puntuacion >= 1000 and 
+            not self.boss_activo and 
+            not getattr(self, 'boss_spawned', False)):
+            self.boss_spawned = True
+            self.ejecutar_evento('ON_TARGET_SCORE')
 
-        if (
-            self.puntuacion >= 1000 and
-            not self.boss_activo
-        ):
-            self.enemigos = []
-            self.enemigos_rapidos = []
-            self.tanks_spawn_boss()
-
-        if random.randint(1,100) == 1:
-
-            self.tanks_spawn_fast_enemy()
-
-        if random.randint(1,300) == 1:
-
+        if random.randint(1, 300) == 1:
             self.tanks_spawn_hammer()
 
         if self.posicion_hammer:
-
-            x, y = self.posicion_hammer
-
-            if (
-                self.player_x == x and
-                self.player_y == y
-            ):
-
+            hx, hy = self.posicion_hammer
+            if (self.player_x <= hx < self.player_x + self.player_w and
+                self.player_y <= hy < self.player_y + self.player_h):
                 self.player_hp += 50
-
+                if self.player_hp > self.player_max_hp:
+                    self.player_hp = self.player_max_hp
                 self.sonido_hammer.play()
-
                 self.posicion_hammer = None
 
         self.tanks_actualizar_balas()
-
         self.tanks_actualizar_enemigos()
-
-        self.tanks_actualizar_enemigos_rapidos()
-
         self.tanks_disparo_enemigos()
-
-        self.tanks_disparo_enemigos_rapidos()
-
         self.tanks_boss_tick()
-
         self.tanks_verificar_colisiones()
 
 
